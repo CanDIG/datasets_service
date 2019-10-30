@@ -1,0 +1,5 @@
+*.pyc
+.coverage
+*.log
+.idea
+data_env
