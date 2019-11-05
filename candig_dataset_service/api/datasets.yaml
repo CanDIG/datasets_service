@@ -295,7 +295,7 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - api_key: []
-  /changelog:
+  /datasets/changelog:
     post:
       tags:
         - changelog
@@ -343,7 +343,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /getVersions:
+  /datasets/getVersions:
     get:
       tags:
         - getVersions
@@ -380,7 +380,7 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - api_key: []
-  "/changelog/{version}":
+  /datasets/changelog/{version}:
     get:
       tags:
         - changelog

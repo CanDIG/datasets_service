@@ -5,6 +5,7 @@ Driver program for service
 """
 
 import sys
+import json
 import argparse
 import logging
 
@@ -18,7 +19,6 @@ import candig_dataset_service.orm
 def main(args=None):
     """
     Main Routine
-    Parse all the args and set up peer and service dictionaries
     """
     if args is None:
         args = sys.argv[1:]
@@ -70,25 +70,35 @@ def configure_app():
     App pulled out as global variable to allow import into
     testing files to access application context
     """
-    app = connexion.FlaskApp(__name__, server='tornado')
+    app = connexion.FlaskApp(__name__, server='tornado', options={"swagger_url": "/"})
 
-    # api_def = pkg_resources.resource_filename('candig_federation', 'api/federation.yaml')
+    api_def = pkg_resources.resource_filename('candig_dataset_service', 'api/datasets.yaml')
 
-    api_def = './api/datasets.yaml'
+    # api_def = './api/datasets.yaml'
 
     app.add_api(api_def, strict_validation=True, validate_responses=True)
+
+    @app.app.after_request
+    def rewrite_bad_request(response):
+        if response.status_code == 400 and response.data.decode('utf-8').find('"title":') != -1:
+            original = json.loads(response.data.decode('utf-8'))
+            response.data = json.dumps({'code': 400, 'message': original["detail"]})
+            response.headers['Content-Type'] = 'application/json'
+
+        return response
 
     return app
 
 
 app = configure_app()
 
-APPLICATION, PORT = main()
+
 
 # expose flask app for uwsgi
 
-application = APPLICATION.app
+application = app.app
 
 if __name__ == '__main__':
+    APPLICATION, PORT = main()
     APPLICATION.app.logger.info("datasets_service running at {}".format(APPLICATION.app.config["self"]))
     APPLICATION.run(port=PORT)

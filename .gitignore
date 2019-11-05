@@ -2,4 +2,5 @@
 .coverage
 *.log
 .idea
-data_env
+*_env
+*.db

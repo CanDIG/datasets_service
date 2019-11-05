@@ -5,7 +5,8 @@ From Swagger file, with python classes via Bravado
 
 import pkg_resources
 import yaml
-from bravado_core.spec import Spec
+from openapi_core import create_spec
+
 
 # Read in the API definition, and parse it with Bravado
 
@@ -21,13 +22,14 @@ _BRAVADO_CONFIG = {
     'validate_swagger_spec': True
 }
 
-_SWAGGER_SPEC = Spec.from_dict(_SPEC_DICT, config=_BRAVADO_CONFIG)
+_SWAGGER_SPEC = create_spec(_SPEC_DICT, spec_url='datasets.yaml')
+
+# _SWAGGER_SPEC = Spec.from_dict(_SPEC_DICT, config=_BRAVADO_CONFIG)
 
 # Generate the Python models from the spec
 
-#BASEPATH = _SWAGGER_SPEC.flattened_spec['basePath']
-Error = _SWAGGER_SPEC.definitions['Error']
-schemas = _SWAGGER_SPEC.definitions['schemas']
-dataset = _SWAGGER_SPEC.definitions['dataset']
-searchFilter = _SWAGGER_SPEC.definitions['searchFilter']
-changeLog = _SWAGGER_SPEC.definitions['changeLog']
+
+BasePath = _SWAGGER_SPEC.servers[0].url
+Version = _SWAGGER_SPEC.info.version
+
+

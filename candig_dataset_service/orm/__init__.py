@@ -72,6 +72,14 @@ def get_session(**kwargs):
     return _DB_SESSION
 
 
+def close_session():
+    """
+    Close the database session
+    """
+    if _DB_SESSION:
+        _DB_SESSION.close()
+
+
 def dump(obj, nonulls=True):
     """
     Generate dictionary  of fields without SQLAlchemy internal fields

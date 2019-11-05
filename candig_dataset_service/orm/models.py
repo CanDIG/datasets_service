@@ -8,6 +8,7 @@ from candig_dataset_service.orm.guid import GUID
 from candig_dataset_service.orm import Base
 import json
 
+
 class JsonArray(TypeDecorator):
     """
     Custom array type to emulate arrays in sqlite3
@@ -48,3 +49,4 @@ class ChangeLog(Base):
     log = Column(JsonArray())
     created = Column(DateTime())
     __table_args__ = ()
+
