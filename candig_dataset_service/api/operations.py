@@ -196,7 +196,7 @@ def search_datasets(tags=None, version=None):
     :return:
     """
     db_session = get_session()
-
+    print(tags, version)
     try:
         datasets = db_session.query(Dataset)
         if version:

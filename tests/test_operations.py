@@ -36,15 +36,7 @@ def load_test_client(db_filename="operations.db"):  # pylint: disable=too-many-l
 
     with context:
         orm.init_db('sqlite:///' + db_filename)
-
-        data = orm.get_session().query(Dataset).all()
-        print("PRIOR TO ADDING\n")
-        print([d.id for d in data])
-
-        print()
-
         dataset_1, dataset_2 = load_test_objects()
-
         app.app.config['BASE_DL_URL'] = 'http://127.0.0.1'
 
     return dataset_1, dataset_2, context
@@ -60,6 +52,7 @@ def test_post_dataset_exists(test_client):
         _, code = operations.post_dataset({'id': ds1['id']})
         assert code == 405
 
+
 def test_post_dataset_field_error(test_client):
     """
     post_dataset
@@ -69,6 +62,7 @@ def test_post_dataset_field_error(test_client):
     with context:
         _, code = operations.post_dataset({'invalid': ds1['id']})
         assert code == 400
+
 
 def test_post_dataset_key_error(test_client):
     """
@@ -89,14 +83,13 @@ def test_get_dataset_by_id(test_client):
     ds1, ds2, context = test_client
 
     with context:
-        # result, code = operations.get_dataset_by_id(ds1['id'])
-        # assert result['id'] == uuid.UUID(ds1['id']).hex
-        # assert code == 200
+        result, code = operations.get_dataset_by_id(ds1['id'])
+        assert result['id'] == uuid.UUID(ds1['id']).hex
+        assert code == 200
 
         result, code = operations.get_dataset_by_id(ds2['id'])
         assert result['id'] == uuid.UUID(ds2['id']).hex
         assert code == 200
-
 
 
 def test_get_dataset_by_id_key_error(test_client):
@@ -161,17 +154,121 @@ def test_search_datasets_basic(test_client):
     ds1, ds2, context = test_client
 
     with context:
-        result, code = operations.get_dataset_by_id(ds1['id'])
-        assert result['id'] == uuid.UUID(ds1['id']).hex
-        assert code == 200
-
-        result, code = operations.get_dataset_by_id(ds2['id'])
-        assert result['id'] == uuid.UUID(ds2['id']).hex
-        assert code == 200
-
         datasets, code = operations.search_datasets()
         assert len(datasets) == 2
         assert datasets == [ds1, ds2]
+        assert code == 200
+
+
+def test_search_datasets_version_1(test_client):
+    """
+    search_datasets
+    """
+
+    ds1, ds2, context = test_client
+
+    with context:
+        datasets, code = operations.search_datasets(version='0.1')
+        assert len(datasets) == 1
+        assert datasets == [ds1]
+        assert code == 200
+
+
+def test_search_datasets_version_2(test_client):
+    """
+    search_datasets
+    """
+
+    ds1, ds2, context = test_client
+
+    with context:
+        datasets, code = operations.search_datasets(version='0.3')
+        assert len(datasets) == 1
+        assert datasets == [ds2]
+        assert code == 200
+
+
+def test_search_datasets_version_none(test_client):
+    """
+    search_datasets
+    """
+
+    ds1, ds2, context = test_client
+
+    with context:
+        datasets, code = operations.search_datasets(version='0.22')
+        assert len(datasets) == 0
+        assert datasets == []
+        assert code == 200
+
+
+def test_search_datasets_tag_1(test_client):
+    """
+    search_datasets
+    """
+
+    ds1, ds2, context = test_client
+
+    with context:
+        datasets, code = operations.search_datasets(tags=['test'])
+        assert len(datasets) == 1
+        assert datasets == [ds2]
+        assert code == 200
+
+
+def test_search_datasets_tag_2(test_client):
+    """
+    search_datasets
+    """
+
+    ds1, ds2, context = test_client
+
+    with context:
+        datasets, code = operations.search_datasets(tags=['candig'])
+        assert len(datasets) == 2
+        assert datasets == [ds1, ds2]
+        assert code == 200
+
+
+def test_search_datasets_tag_multi(test_client):
+    """
+    search_datasets
+    """
+
+    ds1, ds2, context = test_client
+
+    with context:
+        datasets, code = operations.search_datasets(tags=['pine', 'blue'])
+        assert len(datasets) == 2
+        assert datasets == [ds1, ds2]
+        assert code == 200
+
+
+def test_search_datasets_tag_none(test_client):
+    """
+    search_datasets
+    """
+
+    ds1, ds2, context = test_client
+
+    with context:
+        datasets, code = operations.search_datasets(tags=['No'])
+        assert len(datasets) == 0
+        assert datasets == []
+        assert code == 200
+
+
+def test_search_datasets_tag_none_list(test_client):
+    """
+    search_datasets
+    """
+
+    ds1, ds2, context = test_client
+
+    with context:
+        datasets, code = operations.search_datasets(tags='No')
+        assert len(datasets) == 0
+        assert datasets == []
         assert code == 200
 
 
@@ -183,22 +280,20 @@ def load_test_objects():
         'id': dataset_1_id,
         'name': 'dataset_1',
         'description': 'mock profyle project for testing',
-        'tags': ['test', 'candig'],
-        'version': Version
+        'tags': ['candig', 'orange', 'pine'],
+        'version': '0.1'
     }
-
 
     test_dataset_2 = {
         'id': dataset_2_id,
         'name': 'dataset_2',
         'description': 'mock tf4cn project for testing',
-        'tags': ['test', 'candig'],
-        'version': Version
+        'tags': ['test', 'candig', 'blue'],
+        'version': '0.3'
     }
 
     operations.post_dataset(test_dataset_1)
     operations.post_dataset(test_dataset_2)
-
 
     return test_dataset_1, test_dataset_2
 
