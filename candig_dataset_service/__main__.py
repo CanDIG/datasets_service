@@ -71,9 +71,11 @@ def configure_app():
 
     app = connexion.FlaskApp(__name__, server='tornado', options={"swagger_url": "/"})
 
-    api_def = pkg_resources.resource_filename('candig_dataset_service', 'api/datasets.yaml')
+    # api_def = pkg_resources.resource_filename('candig_dataset_service', 'api/datasets.yaml')
 
-    # api_def = './api/datasets.yaml'
+    # uwsgi has issues reading the yaml if the above method is used
+
+    api_def = './api/datasets.yaml'
 
     app.add_api(api_def, strict_validation=True, validate_responses=True)
 
