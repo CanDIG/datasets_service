@@ -487,6 +487,11 @@ components:
         version:
           type: string
           example: 0.1
+        log:
+          type: array
+          items:
+            type: string
+            example: [dev, updated api]
       externalDocs:
         description: Find out more
         url: https://github.com/candig

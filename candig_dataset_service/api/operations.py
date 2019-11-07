@@ -4,7 +4,6 @@ Methods to handle incoming service requests
 
 import json
 import datetime
-import os
 import pkg_resources
 import uuid
 import flask
@@ -16,10 +15,10 @@ from candig_dataset_service.orm import get_session, ORMException, dump
 from candig_dataset_service.api.logging import apilog, logger
 from candig_dataset_service.api.logging import structured_log as struct_log
 from candig_dataset_service.api.models import BasePath, Version
-from candig_dataset_service.api.exceptions import AuthorizationError, IdentifierFormatError
+from candig_dataset_service.api.exceptions import IdentifierFormatError
 
 
-app = flask.current_app
+APP = flask.current_app
 
 
 def _report_search_failed(typename, exception, **kwargs):
@@ -63,6 +62,7 @@ def _report_update_failed(typename, exception, **kwargs):
     message = 'Internal error updating '+typename+'s'
     logger().error(struct_log(action=report, exception=str(exception), **kwargs))
     return dict(message=message, code=500)
+
 
 def _report_conversion_error(typename, exception, **kwargs):
     """
@@ -158,6 +158,7 @@ def get_dataset_by_id(dataset_id):
     return dump(specified_dataset), 200
 
 
+@apilog
 def delete_dataset_by_id(dataset_id):
     """
 
@@ -220,6 +221,7 @@ def search_dataset_filters():
     return get_search_filters(valid_filters)
 
 
+@apilog
 def get_search_filters(valid_filters):
     filter_file = pkg_resources.resource_filename('candig_dataset_service',
                                                   'orm/filters_search.json')
@@ -242,13 +244,10 @@ def search_dataset_discover(tags=None, version=None):
         code=501
     )
 
-
     return err, 501
 
 
 def get_datasets_discover_filters(tags=None, version=None):
-
-
     err = dict(
         message="Not implemented",
         code=501

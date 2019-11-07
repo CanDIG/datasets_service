@@ -30,8 +30,6 @@ def main(args=None):
     parser.add_argument('--logfile', default="./log/datasets.log")
     parser.add_argument('--loglevel', default='INFO',
                         choices=['DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL'])
-    # parser.add_argument('--schemas', default="./configs/schemas.json")
-
 
     # known args used to supply command line args to pytest without raising an error here
     args, _ = parser.parse_known_args()
@@ -70,6 +68,7 @@ def configure_app():
     App pulled out as global variable to allow import into
     testing files to access application context
     """
+
     app = connexion.FlaskApp(__name__, server='tornado', options={"swagger_url": "/"})
 
     api_def = pkg_resources.resource_filename('candig_dataset_service', 'api/datasets.yaml')
@@ -78,7 +77,7 @@ def configure_app():
 
     app.add_api(api_def, strict_validation=True, validate_responses=True)
 
-    @app.app.after_request
+    @app.app.after_request  # pylint:disable=unused-variable,unused-argument
     def rewrite_bad_request(response):
         if response.status_code == 400 and response.data.decode('utf-8').find('"title":') != -1:
             original = json.loads(response.data.decode('utf-8'))
@@ -92,13 +91,12 @@ def configure_app():
 
 app = configure_app()
 
-
-
 # expose flask app for uwsgi
 
 application = app.app
 
 if __name__ == '__main__':
     APPLICATION, PORT = main()
-    APPLICATION.app.logger.info("datasets_service running at {}".format(APPLICATION.app.config["self"]))
+    APPLICATION.app.logger.info("datasets_service running at {}".
+                                format(APPLICATION.app.config["self"]))
     APPLICATION.run(port=PORT)
