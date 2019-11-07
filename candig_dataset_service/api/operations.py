@@ -154,7 +154,6 @@ def get_dataset_by_id(dataset_id):
     if not specified_dataset:
         err = dict(message="Dataset not found: " + str(dataset_id), code=404)
         return err, 404
-    print(dump(specified_dataset))
     return dump(specified_dataset), 200
 
 
@@ -197,7 +196,6 @@ def search_datasets(tags=None, version=None):
     :return:
     """
     db_session = get_session()
-    print(tags, version)
     try:
         datasets = db_session.query(Dataset)
         if version:
