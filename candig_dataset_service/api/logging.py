@@ -55,7 +55,7 @@ def apilog(func, *args, **kwargs):
         for key in kwargs:
             entrydict[key] = kwargs[key]
 
-    logentry = json.dumps(entrydict)
+    logentry = json.dumps(entrydict, cls=FieldEncoder)
 
     current_app.logger.info(logentry)
     return func(*args, **kwargs)
