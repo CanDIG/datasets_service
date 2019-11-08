@@ -1,0 +1,6 @@
+*.pyc
+.coverage
+*.log
+.idea
+*_env
+*.db
