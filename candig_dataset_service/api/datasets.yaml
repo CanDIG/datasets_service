@@ -535,6 +535,7 @@ components:
           type: string
           description: Ontology name
           example: duo
+          enum: [duo]
         terms:
           type: array
           items:
