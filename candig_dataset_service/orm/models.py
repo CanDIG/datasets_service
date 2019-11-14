@@ -36,6 +36,7 @@ class Dataset(Base):
     tags = Column(JsonArray(), default=[])
     name = Column(String(100), unique=True, nullable=False)
     description = Column(String(100), default="")
+    ontologies = Column(JsonArray(), default=[])
     created = Column(DateTime())
     __table_args__ = ()
 

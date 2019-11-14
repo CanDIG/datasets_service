@@ -9,6 +9,7 @@ import uuid
 import flask
 
 from sqlalchemy import exc, or_
+from pronto import Ontology
 
 from candig_dataset_service.orm.models import Dataset, ChangeLog
 from candig_dataset_service.orm import get_session, ORMException, dump
@@ -16,6 +17,9 @@ from candig_dataset_service.api.logging import apilog, logger
 from candig_dataset_service.api.logging import structured_log as struct_log
 from candig_dataset_service.api.models import BasePath, Version
 from candig_dataset_service.api.exceptions import IdentifierFormatError
+from candig_dataset_service.ontologies.duo import OntologyParser, OntologyValidator, ont
+
+
 
 
 APP = flask.current_app
@@ -94,6 +98,10 @@ def _report_write_error(typename, exception, **kwargs):
     err = dict(message=message, code=500)
     return err
 
+
+
+
+
 @apilog
 def post_dataset(body):
     db_session = get_session()
@@ -108,6 +116,37 @@ def post_dataset(body):
         body['version'] = Version
 
     body['created'] = datetime.datetime.utcnow()
+
+    if body.get('ontologies'):
+        logger().info("Ontology Parsing")
+
+        # Ontology objects should be {'id': ontology_name, 'terms': [{'id': 'some code'}]}
+        #
+        mapped = {ontology['id']: ontology['terms'] for ontology in body['ontologies']}
+        if 'duo' in mapped.keys():
+            ov = OntologyValidator(ont=ont, input_json=mapped)
+            valid, invalids = ov.validate_duo()
+            if not valid:
+                err = dict(message="DUO Validation Errors encountered: " + str(invalids), code=400)
+                return err, 400
+
+            duo_terms = json.loads(ov.get_duo_list())
+            duo_copy = duo_terms.copy()
+            duos = []
+            # map(lambda term: term["id"].update(OntologyParser(ont, term["id"]).get_overview()), duo_terms)
+
+            # print(duo_terms)
+
+            for term in duo_terms:
+                stuff = OntologyParser(ont, term["id"]).get_overview()
+                # print(stuff)
+                # print()
+                # print(duo_copy[term["id"]])
+                duos.append({**term, **stuff})
+                print(duos)
+
+
+            body['ontologies'] = duos
 
     try:
         orm_dataset = Dataset(**body)
@@ -127,8 +166,8 @@ def post_dataset(body):
         err = _report_write_error('dataset', e, **body)
         return err, 500
 
-    logger().info(struct_log(action='post_datasets', status='created',
-                             project_id=str(iid), **body))
+    # logger().info(struct_log(action='post_datasets', status='created',
+    #                          project_id=str(iid), **body))
 
     return body, 201, {'Location': BasePath + '/datasets/' + str(iid)}
 
@@ -235,6 +274,14 @@ def get_search_filters(valid_filters):
 
     return response, 200
 
+
+def search_dataset_ontologies():
+    err = dict(
+        message="Not implemented",
+        code=501
+    )
+
+    return err, 501
 
 def search_dataset_discover(tags=None, version=None):
     err = dict(

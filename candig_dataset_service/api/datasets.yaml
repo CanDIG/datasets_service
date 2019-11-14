@@ -213,6 +213,32 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - api_key: []
+  /datasets/search/ontologies:
+    get:
+      tags:
+        - datasets
+      summary: Returns ontologies for dataset searches
+      description: Get ontologies for dataset searches
+      operationId: candig_dataset_service.api.operations.search_dataset_ontologies
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ontology"
+        "400":
+          description: Error
+        "403":
+          description: Authorisation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - api_key: []
   /datasets/discover/search:
     get:
       tags:
@@ -460,11 +486,40 @@ components:
           type: string
         created:
           type: string
+        ontologies:
+          type: array
+          items:
+              $ref: '#/components/schemas/ontology'
+
       externalDocs:
         description: Find out more
         url: https://github.com/candig
       xml:
         name: dataset
+    ontology:
+      type: object
+      required:
+        - id
+        - terms
+      properties:
+        id:
+          type: string
+          description: Ontology name
+          example: duo
+        terms:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+            properties:
+              id:
+                type: string
+                example: DUO:0000018
+              modifier:
+                type: string
+                description: only needed for certain codes
+
     searchFilter:
       type: object
       description: parameter name to use for filter when searching
