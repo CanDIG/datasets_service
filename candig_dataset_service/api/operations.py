@@ -131,20 +131,12 @@ def post_dataset(body):
                 return err, 400
 
             duo_terms = json.loads(ov.get_duo_list())
-            duo_copy = duo_terms.copy()
-            duos = []
-            # map(lambda term: term["id"].update(OntologyParser(ont, term["id"]).get_overview()), duo_terms)
 
-            # print(duo_terms)
+            duos = []
 
             for term in duo_terms:
                 stuff = OntologyParser(ont, term["id"]).get_overview()
-                # print(stuff)
-                # print()
-                # print(duo_copy[term["id"]])
                 duos.append({**term, **stuff})
-                print(duos)
-
 
             body['ontologies'] = duos
 

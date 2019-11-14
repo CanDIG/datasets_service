@@ -21,7 +21,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/dataset"
+              $ref: "#/components/schemas/dataset_ingest"
       responses:
         "201":
           description: New dataset created
@@ -467,7 +467,7 @@ components:
           format: int32
         message:
           type: string
-    dataset:
+    dataset_ingest:
       type: object
       properties:
         id:
@@ -496,6 +496,35 @@ components:
         url: https://github.com/candig
       xml:
         name: dataset
+
+    dataset:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        name:
+          type: string
+          example: test_dataset
+        description:
+          type: string
+        created:
+          type: string
+        ontologies:
+          type: array
+          items:
+              $ref: '#/components/schemas/ontology_duo'
+
+      externalDocs:
+        description: Find out more
+        url: https://github.com/candig
+
     ontology:
       type: object
       required:
@@ -519,6 +548,26 @@ components:
               modifier:
                 type: string
                 description: only needed for certain codes
+
+    ontology_duo:
+      type: object
+      properties:
+        id:
+          type: string
+          description: DUO Code
+          example: DUO:0000014
+        name:
+          type: string
+          description: DUO code name
+          example: 'research use only'
+        definition:
+          type: string
+          description: DUO code detailed description
+          example: 'This secondary category consent code indicates that use is limited to research purposes (e.g., does not include its use in clinical care).'
+        shorthand:
+          type: string
+          description: DUO specific shorthand identifier
+          example: RU
 
     searchFilter:
       type: object
