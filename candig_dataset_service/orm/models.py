@@ -51,3 +51,11 @@ class ChangeLog(Base):
     created = Column(DateTime())
     __table_args__ = ()
 
+
+class ActiveOntologies(Base):
+    """
+    SQLAlchemy class representing Ontologies in use
+    """
+    __tablename__ = 'active_ontologies'
+    name = Column(String(10), primary_key=True)
+    terms = Column(JsonArray(), default=[])

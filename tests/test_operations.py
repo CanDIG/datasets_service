@@ -409,6 +409,19 @@ def test_get_versions(test_client):
         assert code == 200
 
 
+def test_search_ontologies_duo(test_client):
+    """
+    search_dataset_ontologies
+    """
+
+    ds1, ds2, context, _, _ = test_client
+
+    with context:
+        response, code = operations.search_dataset_ontologies()
+        assert code == 200
+        assert response == ["DUO:0000018", "DUO:0000014"]
+
+
 def load_test_objects():
     dataset_1_id = uuid.uuid4().hex
     dataset_2_id = uuid.uuid4().hex

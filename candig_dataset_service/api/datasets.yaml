@@ -228,7 +228,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/ontology"
+                  type: string
+                  description: Ontology terms
+              example: [DUO:0000018, DUO:0000014]
         "400":
           description: Error
         "403":
