@@ -37,6 +37,7 @@ class Dataset(Base):
     name = Column(String(100), unique=True, nullable=False)
     description = Column(String(100), default="")
     ontologies = Column(JsonArray(), default=[])
+    ontologies_internal = Column(JsonArray(), default=[]) # Shorthand for searching/lookup
     created = Column(DateTime())
     __table_args__ = ()
 

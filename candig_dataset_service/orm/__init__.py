@@ -85,7 +85,7 @@ def dump(obj, nonulls=True):
     Generate dictionary  of fields without SQLAlchemy internal fields
     & relationships
     """
-    rels = []
+    rels = ['ontologies_internal']
     if not nonulls:
         return {k: v for k, v in vars(obj).items()
                 if not k.startswith('_') and k not in rels}

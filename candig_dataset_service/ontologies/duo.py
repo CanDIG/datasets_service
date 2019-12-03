@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 from pronto import Ontology
-
+from pprint import pprint
 
 class OntologyFile():
     """
@@ -91,10 +91,10 @@ class OntologyValidator():
     All DUO objects must contain an 'id' field, selected 'id's need to have 'comment'.
 
     Example input file:
-    {"duo": [{"id": "DUO:0000018"}, {"id": "DUO:0000025", "comment": "2030-01-01"}]}
+    {"duo": [{"id": "DUO:0000018"}, {"id": "DUO:0000025", "modifier": "2030-01-01"}]}
 
     Example output (based on the input above):
-    [{"id": "DUO:0000018"}, {"id": "DUO:0000025", "comment": "2030-01-01"}]
+    [{"id": "DUO:0000018"}, {"id": "DUO:0000025", "modifier": "2030-01-01"}]
     """
 
     def __init__(self, ont, input_json):
@@ -153,7 +153,18 @@ class OntologyValidator():
             except KeyError:
                 # Fail if the ID cannot be found in ontology
                 validity = False
-                invalids.append({"KeyError": "One or more DUO IDs you provide are not valid."})
+                invalids.append({"KeyError": "One or more DUO IDs you provide are not valid. "
+                                             "Error on {}".format(duo)})
+
+            except TypeError:
+                # Most likely occurrence is DUO:0000024 having a different key than 'modifier'
+                validity = False
+                modifier = duo.get("modifier")
+                if modifier is None:
+                    invalids.append({"TypeError": "{} needs to have a Key-Value pair of modifier: YYYY-MM-DD".
+                                    format(duo)})
+                else:
+                    invalids.append({"TypeError": "Unknown error on {}".format(duo)})
 
         return validity, invalids
 

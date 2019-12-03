@@ -152,15 +152,19 @@ paths:
           description: version to return
           schema:
             type: string
+        - name: ontologies
+          in: query
+          description: Comma seperated ontology terms to filter by
+          explode: true
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/DUO_term'
+            example: ["DUO:0000018", "DUO:0000014"]
       responses:
         "200":
           description: successful operation
           content:
-            application/xml:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/dataset"
             application/json:
               schema:
                 type: array
@@ -230,7 +234,7 @@ paths:
                 items:
                   type: string
                   description: Ontology terms
-              example: [DUO:0000018, DUO:0000014]
+              example: ["DUO:0000018", "DUO:0000014"]
         "400":
           description: Error
         "403":
@@ -262,6 +266,7 @@ paths:
           description: version to return
           schema:
             type: string
+
       responses:
         "200":
           description: successful operation
@@ -556,9 +561,7 @@ components:
       type: object
       properties:
         id:
-          type: string
-          description: DUO Code
-          example: DUO:0000014
+          $ref: '#/components/schemas/DUO_term'
         name:
           type: string
           description: DUO code name
@@ -571,6 +574,11 @@ components:
           type: string
           description: DUO specific shorthand identifier
           example: RU
+
+    DUO_term:
+      type: string
+      pattern: 'DUO:0+[0-9]+'
+      example: 'DUO:0000017'
 
     searchFilter:
       type: object

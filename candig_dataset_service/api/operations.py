@@ -116,12 +116,12 @@ def post_dataset(body):
         body['version'] = Version
 
     body['created'] = datetime.datetime.utcnow()
+    mapped = []
 
     if body.get('ontologies'):
-        logger().info("Ontology Parsing")
 
         # Ontology objects should be {'id': ontology_name, 'terms': [{'id': 'some code'}]}
-        #
+
         mapped = {ontology['id']: ontology['terms'] for ontology in body['ontologies']}
         if 'duo' in mapped.keys():
             ov = OntologyValidator(ont=ont, input_json=mapped)
@@ -139,6 +139,7 @@ def post_dataset(body):
                 duos.append({**term, **stuff})
 
             body['ontologies'] = duos
+    body['ontologies_internal'] = mapped
 
     try:
         orm_dataset = Dataset(**body)
@@ -158,73 +159,8 @@ def post_dataset(body):
         err = _report_write_error('dataset', e, **body)
         return err, 500
 
-    # logger().info(struct_log(action='post_datasets', status='created',
-    #                          project_id=str(iid), **body))
-
+    body.pop('ontologies_internal')
     return body, 201, {'Location': BasePath + '/datasets/' + str(iid)}
-
-
-@apilog
-def update_dataset_by_id(body):
-    db_session = get_session()
-
-    if not body.get('id'):
-        iid = uuid.uuid1()
-        body['id'] = iid
-    else:
-        iid = body['id']
-
-    if not body.get('version'):
-        body['version'] = Version
-
-    body['created'] = datetime.datetime.utcnow()
-
-    if body.get('ontologies'):
-        logger().info("Ontology Parsing")
-
-        # Ontology objects should be {'id': ontology_name, 'terms': [{'id': 'some code'}]}
-        #
-        mapped = {ontology['id']: ontology['terms'] for ontology in body['ontologies']}
-        if 'duo' in mapped.keys():
-            ov = OntologyValidator(ont=ont, input_json=mapped)
-            valid, invalids = ov.validate_duo()
-            if not valid:
-                err = dict(message="DUO Validation Errors encountered: " + str(invalids), code=400)
-                return err, 400
-
-            duo_terms = json.loads(ov.get_duo_list())
-
-            duos = []
-
-            for term in duo_terms:
-                stuff = OntologyParser(ont, term["id"]).get_overview()
-                duos.append({**term, **stuff})
-
-            body['ontologies'] = duos
-
-    try:
-        orm_dataset = Dataset(**body)
-    except TypeError as e:
-        err = _report_conversion_error('dataset', e, **body)
-        return err, 400
-
-    try:
-        db_session.add(orm_dataset)
-        db_session.commit()
-    except exc.IntegrityError:
-        db_session.rollback()
-        err = _report_object_exists('dataset: ' + body['id'], **body)
-        return err, 405
-    except ORMException as e:
-        db_session.rollback()
-        err = _report_write_error('dataset', e, **body)
-        return err, 500
-
-    # logger().info(struct_log(action='post_datasets', status='created',
-    #                          project_id=str(iid), **body))
-
-    return body, 201, {'Location': BasePath + '/datasets/' + str(iid)}
-
 
 
 @apilog
@@ -248,6 +184,8 @@ def get_dataset_by_id(dataset_id):
     if not specified_dataset:
         err = dict(message="Dataset not found: " + str(dataset_id), code=404)
         return err, 404
+
+
     return dump(specified_dataset), 200
 
 
@@ -283,7 +221,7 @@ def delete_dataset_by_id(dataset_id):
 
 
 @apilog
-def search_datasets(tags=None, version=None):
+def search_datasets(tags=None, version=None, ontologies=None):
     """
     :param tags:
     :param version:
@@ -297,6 +235,9 @@ def search_datasets(tags=None, version=None):
         if tags:
             # return any project that matches at least one tag
             datasets = datasets.filter(or_(*[Dataset.tags.contains(tag) for tag in tags]))
+        if ontologies:
+            # print(Dataset.ontologies_internal)
+            datasets = datasets.filter(or_(*[Dataset.ontologies_internal.contains(term) for term in ontologies]))
     except ORMException as e:
         err = _report_search_failed('dataset', e)
         return err, 500
@@ -340,12 +281,11 @@ def search_dataset_ontologies():
     try:
         datasets = db_session.query(Dataset)
 
-        # return any datasets that matches at least one tag
         valid = datasets.filter(Dataset.ontologies != [])
 
         ontologies = [dump(x)['ontologies'] for x in valid]
 
-        terms = [term['id'] for ontology in ontologies for term in ontology]
+        terms = sorted(list(set([term['id'] for ontology in ontologies for term in ontology])))
 
     except ORMException as e:
         err = _report_search_failed('dataset', e)
@@ -454,3 +394,4 @@ def validate_uuid_string(field_name, uuid_str):
     except ValueError:
         raise IdentifierFormatError(field_name)
     return
+

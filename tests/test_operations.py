@@ -324,6 +324,20 @@ def test_search_datasets_different_version_tag(test_client):
         assert code == 200
 
 
+def test_search_datasets_one_ontology(test_client):
+    """
+    search_datasets
+    """
+
+    ds1, ds2, context, _, _ = test_client
+
+    with context:
+        datasets, code = operations.search_datasets(ontologies=["DUO:0000018"])
+        assert len(datasets) == 1
+        assert datasets == [ds1]
+        assert code == 200
+
+
 def test_search_dataset_filters(test_client):
     """
     search_dataset_filters
@@ -419,7 +433,7 @@ def test_search_ontologies_duo(test_client):
     with context:
         response, code = operations.search_dataset_ontologies()
         assert code == 200
-        assert response == ["DUO:0000018", "DUO:0000014"]
+        assert response == ["DUO:0000014", "DUO:0000018"]
 
 
 def load_test_objects():
@@ -434,7 +448,7 @@ def load_test_objects():
         'version': '0.1',
         'ontologies': [
             {"id": "duo",
-             "terms": [{"id": "DUO:0000018"}]}
+             "terms": [{"id": "DUO:0000018"}, {"id": "DUO:0000014"}]}
         ]
 
 
