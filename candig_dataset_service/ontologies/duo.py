@@ -54,7 +54,7 @@ class OntologyParser():
 
     def get_shorthand(self):
         annotations = self.ontology_term_object.annotations
-        return next((pv.literal for pv in annotations if pv.property == self.shorthand_prop), None)
+        return next((pv.literal for pv in annotations if pv.property == self.shorthand_prop), "None")
 
     def get_name(self):
         return self.ontology_term_object.name
