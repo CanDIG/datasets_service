@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: Dataset Service API
   description: API for datasets retrieval and discovery
-  version: "0.1"
+  version: "1.0.0"
 tags:
   - name: datasets
     description: High level collection of datasets
@@ -227,6 +227,11 @@ paths:
       responses:
         "200":
           description: successful operation
+          headers:
+            X-Source:
+              schema:
+                type: string
+              description: IP Address
           content:
             application/json:
               schema:

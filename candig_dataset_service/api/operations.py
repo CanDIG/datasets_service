@@ -8,6 +8,7 @@ import pkg_resources
 import uuid
 import flask
 
+from flask import Response, jsonify
 from sqlalchemy import exc, or_
 from pronto import Ontology
 
@@ -99,7 +100,10 @@ def _report_write_error(typename, exception, **kwargs):
     return err
 
 
-
+def log_outgoing(code, destination, path):
+    APP.logger.info("{}: {} in {}. Sending to {}".format(
+        APP.config['name'], code, path, destination
+    ))
 
 
 @apilog
@@ -145,7 +149,7 @@ def post_dataset(body):
         orm_dataset = Dataset(**body)
     except TypeError as e:
         err = _report_conversion_error('dataset', e, **body)
-        return err, 400
+        return err, 400, {'X-Source': APP.config['name']}
 
     try:
         db_session.add(orm_dataset)
@@ -153,14 +157,14 @@ def post_dataset(body):
     except exc.IntegrityError:
         db_session.rollback()
         err = _report_object_exists('dataset: ' + body['id'], **body)
-        return err, 405
+        return err, 405, {'X-Source': APP.config['name']}
     except ORMException as e:
         db_session.rollback()
         err = _report_write_error('dataset', e, **body)
-        return err, 500
+        return err, 500, {'X-Source': APP.config['name']}
 
     body.pop('ontologies_internal')
-    return body, 201, {'Location': BasePath + '/datasets/' + str(iid)}
+    return body, 201, {'X-Source': APP.config['name']}
 
 
 @apilog
@@ -183,7 +187,7 @@ def get_dataset_by_id(dataset_id):
 
     if not specified_dataset:
         err = dict(message="Dataset not found: " + str(dataset_id), code=404)
-        return err, 404
+        return err, 404, {'X-Source': APP.config['name']}
 
 
     return dump(specified_dataset), 200
@@ -217,7 +221,7 @@ def delete_dataset_by_id(dataset_id):
         err = _report_update_failed('dataset', e, dataset_id=str(dataset_id))
         return err, 500
 
-    return None, 204
+    return None, 204, {'X-Source': APP.config['name']}
 
 
 @apilog
@@ -241,7 +245,7 @@ def search_datasets(tags=None, version=None, ontologies=None):
     except ORMException as e:
         err = _report_search_failed('dataset', e)
         return err, 500
-    return [dump(x) for x in datasets], 200
+    return [dump(x) for x in datasets], 200, {'X-Source': APP.config['name']}
 
 
 @apilog
@@ -268,7 +272,7 @@ def get_search_filters(valid_filters):
         if search_filter["filter"] in valid_filters:
             response.append(search_filter)
 
-    return response, 200
+    return response, 200, {'X-Source': APP.config['name']}
 
 
 @apilog
@@ -276,6 +280,8 @@ def search_dataset_ontologies():
     """
     Return all ontologies currently used by datasets
     """
+    print("sanity")
+    print(flask.request.remote_addr, flask.request.headers)
 
     db_session = get_session()
     try:
@@ -291,7 +297,10 @@ def search_dataset_ontologies():
         err = _report_search_failed('dataset', e)
         return err, 500
 
-    return terms, 200
+    log_outgoing(200, flask.request.headers['host'], flask.request.full_path)
+    return terms, 200, {'X-Source': APP.config['name']}
+    # print("Returning: {}".format(terms))
+    # return jsonify(terms)
 
 
 def search_dataset_discover(tags=None, version=None):
@@ -324,7 +333,7 @@ def post_change_log(body):
         orm_changelog = ChangeLog(**body)
     except TypeError as e:
         err = _report_conversion_error('changelog', e, **body)
-        return err, 400
+        return err, 400, {'X-Source': APP.config['name']}
 
     try:
         db_session.add(orm_changelog)
@@ -332,15 +341,15 @@ def post_change_log(body):
     except exc.IntegrityError:
         db_session.rollback()
         err = _report_object_exists('changelog: ' + body['version'], **body)
-        return err, 405
+        return err, 405, {'X-Source': APP.config['name']}
     except ORMException as e:
         err = _report_write_error('changelog', e, **body)
-        return err, 500
+        return err, 500, {'X-Source': APP.config['name']}
 
     logger().info(struct_log(action='post_change_log', status='created',
                              change_version=change_version, **body))
 
-    return body, 201, {'Location': BasePath + '/changelog/' + change_version}
+    return body, 201, {'X-Source': APP.config['name']}
 
 
 @apilog
@@ -357,7 +366,7 @@ def get_versions():
         err = _report_search_failed('versions', e)
         return err, 500
 
-    return [entry.version for entry in versions], 200
+    return [entry.version for entry in versions], 200, {'X-Source': APP.config['name']}
 
 
 @apilog
@@ -380,7 +389,7 @@ def get_change_log(version):
         err = dict(message="Change log not found", code=404)
         return err, 404
 
-    return dump(log), 200
+    return dump(log), 200, {'X-Source': APP.config['name']}
 
 
 def validate_uuid_string(field_name, uuid_str):
