@@ -34,6 +34,7 @@ def load_test_client(db_filename="operations.db"):  # pylint: disable=too-many-l
         orm.init_db('sqlite:///' + db_filename)
         dataset_1, dataset_2, changelog_1, changelog_2 = load_test_objects()
         app.app.config['BASE_DL_URL'] = 'http://127.0.0.1'
+        app.app.config['name'] = 'test'
 
     return dataset_1, dataset_2, context, changelog_1, changelog_2
 
@@ -45,7 +46,7 @@ def test_post_dataset_exists(test_client):
     ds1, ds2, context, _, _ = test_client
 
     with context:
-        _, code = operations.post_dataset({'id': ds1['id']})
+        _, code, _ = operations.post_dataset({'id': ds1['id']})
         assert code == 405
 
 
@@ -56,7 +57,7 @@ def test_post_dataset_field_error(test_client):
     ds1, ds2, context, _, _ = test_client
 
     with context:
-        _, code = operations.post_dataset({'invalid': ds1['id']})
+        _, code, _ = operations.post_dataset({'invalid': ds1['id']})
         assert code == 400
 
 
@@ -67,7 +68,7 @@ def test_post_dataset_key_error(test_client):
     ds1, ds2, context, _, _ = test_client
 
     with context:
-        _, code = operations.post_dataset({'id': 6547864725, 'version': 55})
+        _, code, _ = operations.post_dataset({'id': 6547864725, 'version': 55})
         assert code == 500
 
 
@@ -79,11 +80,11 @@ def test_get_dataset_by_id(test_client):
     ds1, ds2, context, _, _ = test_client
 
     with context:
-        result, code = operations.get_dataset_by_id(ds1['id'])
+        result, code, _ = operations.get_dataset_by_id(ds1['id'])
         assert result['id'] == uuid.UUID(ds1['id']).hex
         assert code == 200
 
-        result, code = operations.get_dataset_by_id(ds2['id'])
+        result, code, _ = operations.get_dataset_by_id(ds2['id'])
         assert result['id'] == uuid.UUID(ds2['id']).hex
         assert code == 200
 
@@ -96,7 +97,7 @@ def test_get_dataset_ontologies(test_client):
     ds1, ds2, context, _, _ = test_client
 
     with context:
-        result, code = operations.get_dataset_by_id(ds1['id'])
+        result, code, _ = operations.get_dataset_by_id(ds1['id'])
         assert result['ontologies'] == ontologies['d1']['terms']
         assert code == 200
 
@@ -111,7 +112,7 @@ def test_get_dataset_by_id_key_error(test_client):
 
     with context:
 
-        result, code = operations.get_dataset_by_id('Wrong')
+        result, code, _ = operations.get_dataset_by_id('Wrong')
         assert code == 404
 
 
@@ -123,10 +124,10 @@ def test_delete_dataset_by_id(test_client):
     _, ds2, context, _, _ = test_client
 
     with context:
-        _, code = operations.delete_dataset_by_id(ds2['id'])
+        _, code, _ = operations.delete_dataset_by_id(ds2['id'])
         assert code == 204
 
-        result, code = operations.get_dataset_by_id(ds2['id'])
+        result, code, _ = operations.get_dataset_by_id(ds2['id'])
         assert code == 404
 
 
@@ -138,7 +139,7 @@ def test_delete_dataset_by_id_missing(test_client):
     _, ds2, context, _, _ = test_client
 
     with context:
-        _, code = operations.delete_dataset_by_id(uuid.uuid1().hex)
+        _, code, _ = operations.delete_dataset_by_id(uuid.uuid1().hex)
         assert code == 404
 
 
@@ -150,9 +151,9 @@ def test_delete_dataset_by_id_bad_UUID(test_client):
     _, ds2, context, _, _ = test_client
 
     with context:
-        _, code = operations.delete_dataset_by_id('wrong')
+        _, code, _ = operations.delete_dataset_by_id('wrong')
         assert code == 500
-        _, code = operations.delete_dataset_by_id(564564)
+        _, code, _ = operations.delete_dataset_by_id(564564)
         assert code == 500
 
 
@@ -164,7 +165,7 @@ def test_search_datasets_basic(test_client):
     ds1, ds2, context, _, _ = test_client
 
     with context:
-        datasets, code = operations.search_datasets()
+        datasets, code, _ = operations.search_datasets()
         assert len(datasets) == 2
         assert datasets == [ds1, ds2]
         assert code == 200
@@ -178,7 +179,7 @@ def test_search_datasets_version_1(test_client):
     ds1, ds2, context, _, _ = test_client
 
     with context:
-        datasets, code = operations.search_datasets(version='0.1')
+        datasets, code, _ = operations.search_datasets(version='0.1')
         assert len(datasets) == 1
         assert datasets == [ds1]
         assert code == 200
@@ -192,7 +193,7 @@ def test_search_datasets_version_2(test_client):
     ds1, ds2, context, _, _ = test_client
 
     with context:
-        datasets, code = operations.search_datasets(version='0.3')
+        datasets, code, _ = operations.search_datasets(version='0.3')
         assert len(datasets) == 1
         assert datasets == [ds2]
         assert code == 200
@@ -206,7 +207,7 @@ def test_search_datasets_version_none(test_client):
     ds1, ds2, context, _, _ = test_client
 
     with context:
-        datasets, code = operations.search_datasets(version='0.22')
+        datasets, code, _ = operations.search_datasets(version='0.22')
         assert len(datasets) == 0
         assert datasets == []
         assert code == 200
@@ -220,7 +221,7 @@ def test_search_datasets_tag_1(test_client):
     ds1, ds2, context, _, _ = test_client
 
     with context:
-        datasets, code = operations.search_datasets(tags=['test'])
+        datasets, code, _ = operations.search_datasets(tags=['test'])
         assert len(datasets) == 1
         assert datasets == [ds2]
         assert code == 200
@@ -234,7 +235,7 @@ def test_search_datasets_tag_2(test_client):
     ds1, ds2, context, _, _ = test_client
 
     with context:
-        datasets, code = operations.search_datasets(tags=['candig'])
+        datasets, code, _ = operations.search_datasets(tags=['candig'])
         assert len(datasets) == 2
         assert datasets == [ds1, ds2]
         assert code == 200
@@ -248,7 +249,7 @@ def test_search_datasets_tag_multi(test_client):
     ds1, ds2, context, _, _ = test_client
 
     with context:
-        datasets, code = operations.search_datasets(tags=['pine', 'blue'])
+        datasets, code, _ = operations.search_datasets(tags=['pine', 'blue'])
         assert len(datasets) == 2
         assert datasets == [ds1, ds2]
         assert code == 200
@@ -262,7 +263,7 @@ def test_search_datasets_tag_none(test_client):
     ds1, ds2, context, _, _ = test_client
 
     with context:
-        datasets, code = operations.search_datasets(tags=['No'])
+        datasets, code, _ = operations.search_datasets(tags=['No'])
         assert len(datasets) == 0
         assert datasets == []
         assert code == 200
@@ -276,7 +277,7 @@ def test_search_datasets_tag_no_list(test_client):
     ds1, ds2, context, _, _ = test_client
 
     with context:
-        datasets, code = operations.search_datasets(tags='No')
+        datasets, code, _ = operations.search_datasets(tags='No')
         assert len(datasets) == 0
         assert datasets == []
         assert code == 200
@@ -290,7 +291,7 @@ def test_search_datasets_version_tag(test_client):
     ds1, ds2, context, _, _ = test_client
 
     with context:
-        datasets, code = operations.search_datasets(tags=['pine', 'blue'], version="0.3")
+        datasets, code, _ = operations.search_datasets(tags=['pine', 'blue'], version="0.3")
         assert len(datasets) == 1
         assert datasets == [ds2]
         assert code == 200
@@ -304,7 +305,7 @@ def test_search_datasets_version_bad_tag(test_client):
     ds1, ds2, context, _, _ = test_client
 
     with context:
-        datasets, code = operations.search_datasets(tags=['pIne'], version="0.3")
+        datasets, code, _ = operations.search_datasets(tags=['pIne'], version="0.3")
         assert len(datasets) == 0
         assert datasets == []
         assert code == 200
@@ -318,7 +319,7 @@ def test_search_datasets_different_version_tag(test_client):
     ds1, ds2, context, _, _ = test_client
 
     with context:
-        datasets, code = operations.search_datasets(tags=['pine'], version="0.3")
+        datasets, code, _ = operations.search_datasets(tags=['pine'], version="0.3")
         assert len(datasets) == 0
         assert datasets == []
         assert code == 200
@@ -332,7 +333,7 @@ def test_search_datasets_one_ontology(test_client):
     ds1, ds2, context, _, _ = test_client
 
     with context:
-        datasets, code = operations.search_datasets(ontologies=["DUO:0000018"])
+        datasets, code, _ = operations.search_datasets(ontologies=["DUO:0000018"])
         assert len(datasets) == 1
         assert datasets == [ds1]
         assert code == 200
@@ -346,7 +347,7 @@ def test_search_dataset_filters(test_client):
     _, _, context, _, _ = test_client
 
     with context:
-        filters, code = operations.search_dataset_filters()
+        filters, code, _ = operations.search_dataset_filters()
         assert filters == filterStruct
         assert code == 200
 
@@ -359,7 +360,7 @@ def test_post_change_log(test_client):
     _, _, context, cl1, _ = test_client
 
     with context:
-        response, code = operations.post_change_log(cl1)
+        response, code, _ = operations.post_change_log(cl1)
         assert code == 405
 
 
@@ -376,7 +377,7 @@ def test_post_change_log_bad_key(test_client):
     }
 
     with context:
-        response, code = operations.post_change_log(test_changelog_bad)
+        response, code, _ = operations.post_change_log(test_changelog_bad)
         assert code == 400
 
 
@@ -393,7 +394,7 @@ def test_post_change_log_int_version(test_client):
     }
 
     with context:
-        response, code = operations.post_change_log(test_changelog_bad)
+        response, code, _ = operations.post_change_log(test_changelog_bad)
         assert code == 400
 
 
@@ -405,7 +406,7 @@ def test_get_change_log(test_client):
     _, _, context, cl1, _ = test_client
 
     with context:
-        response, code = operations.get_change_log(cl1['version'])
+        response, code, _ = operations.get_change_log(cl1['version'])
         assert response == cl1
         assert code == 200
 
@@ -418,7 +419,7 @@ def test_get_versions(test_client):
     _, _, context, cl1, cl2 = test_client
 
     with context:
-        response, code = operations.get_versions()
+        response, code, _ = operations.get_versions()
         assert response == [cl1['version'], cl2['version']]
         assert code == 200
 
@@ -431,7 +432,7 @@ def test_search_ontologies_duo(test_client):
     ds1, ds2, context, _, _ = test_client
 
     with context:
-        response, code = operations.search_dataset_ontologies()
+        response, code, _ = operations.search_dataset_ontologies()
         assert code == 200
         assert response == ["DUO:0000014", "DUO:0000018"]
 

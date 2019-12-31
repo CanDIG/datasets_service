@@ -105,10 +105,19 @@ def log_outgoing(code, destination, path):
         APP.config['name'], code, path, destination
     ))
 
+def get_headers():
+    headers = {}
+    try: 
+        headers['X-Source']: APP.config['name']
+    except KeyError:
+        headers['X-Source']: 'candig_service'
+
 
 @apilog
 def post_dataset(body):
     db_session = get_session()
+
+    print(APP.config)
 
     if not body.get('id'):
         iid = uuid.uuid1()
@@ -132,7 +141,7 @@ def post_dataset(body):
             valid, invalids = ov.validate_duo()
             if not valid:
                 err = dict(message="DUO Validation Errors encountered: " + str(invalids), code=400)
-                return err, 400
+                return err, 400, get_headers()
 
             duo_terms = json.loads(ov.get_duo_list())
 
@@ -149,7 +158,7 @@ def post_dataset(body):
         orm_dataset = Dataset(**body)
     except TypeError as e:
         err = _report_conversion_error('dataset', e, **body)
-        return err, 400, {'X-Source': APP.config['name']}
+        return err, 400, get_headers()
 
     try:
         db_session.add(orm_dataset)
@@ -157,14 +166,14 @@ def post_dataset(body):
     except exc.IntegrityError:
         db_session.rollback()
         err = _report_object_exists('dataset: ' + body['id'], **body)
-        return err, 405, {'X-Source': APP.config['name']}
+        return err, 405, get_headers()
     except ORMException as e:
         db_session.rollback()
         err = _report_write_error('dataset', e, **body)
-        return err, 500, {'X-Source': APP.config['name']}
+        return err, 500, get_headers()
 
     body.pop('ontologies_internal')
-    return body, 201, {'X-Source': APP.config['name']}
+    return body, 201, get_headers()
 
 
 @apilog
@@ -183,14 +192,14 @@ def get_dataset_by_id(dataset_id):
         err = dict(
             message=str(e),
             code=404)
-        return err, 404
+        return err, 404, get_headers()
 
     if not specified_dataset:
         err = dict(message="Dataset not found: " + str(dataset_id), code=404)
-        return err, 404, {'X-Source': APP.config['name']}
+        return err, 404, get_headers()
 
 
-    return dump(specified_dataset), 200
+    return dump(specified_dataset), 200, get_headers()
 
 
 @apilog
@@ -207,11 +216,11 @@ def delete_dataset_by_id(dataset_id):
             .get(dataset_id)
     except ORMException as e:
         err = _report_search_failed('call', e, dataset_id=str(dataset_id))
-        return err, 500
+        return err, 500, get_headers()
 
     if not specified_dataset:
         err = dict(message="Dataset not found: " + str(dataset_id), code=404)
-        return err, 404
+        return err, 404, get_headers()
 
     try:
         row = db_session.query(Dataset).filter(Dataset.id == dataset_id).first()
@@ -219,9 +228,9 @@ def delete_dataset_by_id(dataset_id):
         db_session.commit()
     except ORMException as e:
         err = _report_update_failed('dataset', e, dataset_id=str(dataset_id))
-        return err, 500
+        return err, 500, get_headers()
 
-    return None, 204, {'X-Source': APP.config['name']}
+    return None, 204, get_headers()
 
 
 @apilog
@@ -244,8 +253,8 @@ def search_datasets(tags=None, version=None, ontologies=None):
             datasets = datasets.filter(or_(*[Dataset.ontologies_internal.contains(term) for term in ontologies]))
     except ORMException as e:
         err = _report_search_failed('dataset', e)
-        return err, 500
-    return [dump(x) for x in datasets], 200, {'X-Source': APP.config['name']}
+        return err, 500, get_headers()
+    return [dump(x) for x in datasets], 200, get_headers()
 
 
 @apilog
@@ -272,7 +281,7 @@ def get_search_filters(valid_filters):
         if search_filter["filter"] in valid_filters:
             response.append(search_filter)
 
-    return response, 200, {'X-Source': APP.config['name']}
+    return response, 200, get_headers()
 
 
 @apilog
@@ -280,8 +289,7 @@ def search_dataset_ontologies():
     """
     Return all ontologies currently used by datasets
     """
-    print("sanity")
-    print(flask.request.remote_addr, flask.request.headers)
+    # print(flask.request.remote_addr, flask.request.headers)
 
     db_session = get_session()
     try:
@@ -295,10 +303,10 @@ def search_dataset_ontologies():
 
     except ORMException as e:
         err = _report_search_failed('dataset', e)
-        return err, 500
+        return err, 500, get_headers()
 
-    log_outgoing(200, flask.request.headers['host'], flask.request.full_path)
-    return terms, 200, {'X-Source': APP.config['name']}
+    # log_outgoing(200, flask.request.headers['host'], flask.request.full_path)
+    return terms, 200, get_headers()
     # print("Returning: {}".format(terms))
     # return jsonify(terms)
 
@@ -333,7 +341,7 @@ def post_change_log(body):
         orm_changelog = ChangeLog(**body)
     except TypeError as e:
         err = _report_conversion_error('changelog', e, **body)
-        return err, 400, {'X-Source': APP.config['name']}
+        return err, 400, get_headers()
 
     try:
         db_session.add(orm_changelog)
@@ -341,15 +349,15 @@ def post_change_log(body):
     except exc.IntegrityError:
         db_session.rollback()
         err = _report_object_exists('changelog: ' + body['version'], **body)
-        return err, 405, {'X-Source': APP.config['name']}
+        return err, 405, get_headers()
     except ORMException as e:
         err = _report_write_error('changelog', e, **body)
-        return err, 500, {'X-Source': APP.config['name']}
+        return err, 500, get_headers()
 
     logger().info(struct_log(action='post_change_log', status='created',
                              change_version=change_version, **body))
 
-    return body, 201, {'X-Source': APP.config['name']}
+    return body, 201, get_headers()
 
 
 @apilog
@@ -364,9 +372,9 @@ def get_versions():
         versions = db_session.query(change_log.version)
     except ORMException as e:
         err = _report_search_failed('versions', e)
-        return err, 500
+        return err, 500, get_headers()
 
-    return [entry.version for entry in versions], 200, {'X-Source': APP.config['name']}
+    return [entry.version for entry in versions], 200, get_headers()
 
 
 @apilog
@@ -383,13 +391,13 @@ def get_change_log(version):
             .get(version)
     except ORMException as e:
         err = _report_search_failed('change log', e)
-        return err, 500
+        return err, 500, get_headers()
 
     if not log:
         err = dict(message="Change log not found", code=404)
-        return err, 404
+        return err, 404, get_headers()
 
-    return dump(log), 200, {'X-Source': APP.config['name']}
+    return dump(log), 200, get_headers()
 
 
 def validate_uuid_string(field_name, uuid_str):
