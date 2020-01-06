@@ -141,7 +141,7 @@ def post_dataset(body):
             valid, invalids = ov.validate_duo()
             if not valid:
                 err = dict(message="DUO Validation Errors encountered: " + str(invalids), code=400)
-                return err, 400, get_headers()
+                return err, 400 
 
             duo_terms = json.loads(ov.get_duo_list())
 
@@ -158,7 +158,7 @@ def post_dataset(body):
         orm_dataset = Dataset(**body)
     except TypeError as e:
         err = _report_conversion_error('dataset', e, **body)
-        return err, 400, get_headers()
+        return err, 400 
 
     try:
         db_session.add(orm_dataset)
@@ -166,14 +166,14 @@ def post_dataset(body):
     except exc.IntegrityError:
         db_session.rollback()
         err = _report_object_exists('dataset: ' + body['id'], **body)
-        return err, 405, get_headers()
+        return err, 405 
     except ORMException as e:
         db_session.rollback()
         err = _report_write_error('dataset', e, **body)
-        return err, 500, get_headers()
+        return err, 500 
 
     body.pop('ontologies_internal')
-    return body, 201, get_headers()
+    return body, 201 
 
 
 @apilog
@@ -192,14 +192,14 @@ def get_dataset_by_id(dataset_id):
         err = dict(
             message=str(e),
             code=404)
-        return err, 404, get_headers()
+        return err, 404 
 
     if not specified_dataset:
         err = dict(message="Dataset not found: " + str(dataset_id), code=404)
-        return err, 404, get_headers()
+        return err, 404 
 
 
-    return dump(specified_dataset), 200, get_headers()
+    return dump(specified_dataset), 200 
 
 
 @apilog
@@ -216,11 +216,11 @@ def delete_dataset_by_id(dataset_id):
             .get(dataset_id)
     except ORMException as e:
         err = _report_search_failed('call', e, dataset_id=str(dataset_id))
-        return err, 500, get_headers()
+        return err, 500 
 
     if not specified_dataset:
         err = dict(message="Dataset not found: " + str(dataset_id), code=404)
-        return err, 404, get_headers()
+        return err, 404 
 
     try:
         row = db_session.query(Dataset).filter(Dataset.id == dataset_id).first()
@@ -228,9 +228,9 @@ def delete_dataset_by_id(dataset_id):
         db_session.commit()
     except ORMException as e:
         err = _report_update_failed('dataset', e, dataset_id=str(dataset_id))
-        return err, 500, get_headers()
+        return err, 500 
 
-    return None, 204, get_headers()
+    return None, 204 
 
 
 @apilog
@@ -253,8 +253,8 @@ def search_datasets(tags=None, version=None, ontologies=None):
             datasets = datasets.filter(or_(*[Dataset.ontologies_internal.contains(term) for term in ontologies]))
     except ORMException as e:
         err = _report_search_failed('dataset', e)
-        return err, 500, get_headers()
-    return [dump(x) for x in datasets], 200, get_headers()
+        return err, 500 
+    return [dump(x) for x in datasets], 200 
 
 
 @apilog
@@ -281,7 +281,7 @@ def get_search_filters(valid_filters):
         if search_filter["filter"] in valid_filters:
             response.append(search_filter)
 
-    return response, 200, get_headers()
+    return response, 200 
 
 
 @apilog
@@ -303,10 +303,11 @@ def search_dataset_ontologies():
 
     except ORMException as e:
         err = _report_search_failed('dataset', e)
-        return err, 500, get_headers()
+        return err, 500 
 
     # log_outgoing(200, flask.request.headers['host'], flask.request.full_path)
-    return terms, 200, get_headers()
+    # return terms, 200 
+    return terms, 200
     # print("Returning: {}".format(terms))
     # return jsonify(terms)
 
@@ -341,7 +342,7 @@ def post_change_log(body):
         orm_changelog = ChangeLog(**body)
     except TypeError as e:
         err = _report_conversion_error('changelog', e, **body)
-        return err, 400, get_headers()
+        return err, 400 
 
     try:
         db_session.add(orm_changelog)
@@ -349,15 +350,15 @@ def post_change_log(body):
     except exc.IntegrityError:
         db_session.rollback()
         err = _report_object_exists('changelog: ' + body['version'], **body)
-        return err, 405, get_headers()
+        return err, 405 
     except ORMException as e:
         err = _report_write_error('changelog', e, **body)
-        return err, 500, get_headers()
+        return err, 500 
 
     logger().info(struct_log(action='post_change_log', status='created',
                              change_version=change_version, **body))
 
-    return body, 201, get_headers()
+    return body, 201 
 
 
 @apilog
@@ -372,9 +373,9 @@ def get_versions():
         versions = db_session.query(change_log.version)
     except ORMException as e:
         err = _report_search_failed('versions', e)
-        return err, 500, get_headers()
+        return err, 500 
 
-    return [entry.version for entry in versions], 200, get_headers()
+    return [entry.version for entry in versions], 200 
 
 
 @apilog
@@ -391,13 +392,13 @@ def get_change_log(version):
             .get(version)
     except ORMException as e:
         err = _report_search_failed('change log', e)
-        return err, 500, get_headers()
+        return err, 500 
 
     if not log:
         err = dict(message="Change log not found", code=404)
-        return err, 404, get_headers()
+        return err, 404 
 
-    return dump(log), 200, get_headers()
+    return dump(log), 200 
 
 
 def validate_uuid_string(field_name, uuid_str):
