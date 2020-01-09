@@ -4,19 +4,17 @@ Methods to handle incoming service requests
 
 import json
 import datetime
-import pkg_resources
 import uuid
+import pkg_resources
 import flask
 
-from flask import Response, jsonify
 from sqlalchemy import exc, or_
-from pronto import Ontology
 
 from candig_dataset_service.orm.models import Dataset, ChangeLog
 from candig_dataset_service.orm import get_session, ORMException, dump
 from candig_dataset_service.api.logging import apilog, logger
 from candig_dataset_service.api.logging import structured_log as struct_log
-from candig_dataset_service.api.models import BasePath, Version
+from candig_dataset_service.api.models import Version
 from candig_dataset_service.api.exceptions import IdentifierFormatError
 from candig_dataset_service.ontologies.duo import OntologyParser, OntologyValidator, ont
 
@@ -100,24 +98,17 @@ def _report_write_error(typename, exception, **kwargs):
     return err
 
 
-def log_outgoing(code, destination, path):
-    APP.logger.info("{}: {} in {}. Sending to {}".format(
-        APP.config['name'], code, path, destination
-    ))
-
-def get_headers():
-    headers = {}
-    try: 
-        headers['X-Source']: APP.config['name']
-    except KeyError:
-        headers['X-Source']: 'candig_service'
-
-
 @apilog
 def post_dataset(body):
-    db_session = get_session()
+    """
+    Creates a new dataset following the dataset_ingest
+    schema defined in datasets.yaml
 
-    print(APP.config)
+    The ontologies_internal property is used when looking
+    up current ontologies but is not a property to be returned
+    when querying the dataset.
+    """
+    db_session = get_session()
 
     if not body.get('id'):
         iid = uuid.uuid1()
@@ -137,13 +128,13 @@ def post_dataset(body):
 
         mapped = {ontology['id']: ontology['terms'] for ontology in body['ontologies']}
         if 'duo' in mapped.keys():
-            ov = OntologyValidator(ont=ont, input_json=mapped)
-            valid, invalids = ov.validate_duo()
+            validator = OntologyValidator(ont=ont, input_json=mapped)
+            valid, invalids = validator.validate_duo()
             if not valid:
                 err = dict(message="DUO Validation Errors encountered: " + str(invalids), code=400)
-                return err, 400 
+                return err, 400
 
-            duo_terms = json.loads(ov.get_duo_list())
+            duo_terms = json.loads(validator.get_duo_list())
 
             duos = []
 
@@ -158,7 +149,7 @@ def post_dataset(body):
         orm_dataset = Dataset(**body)
     except TypeError as e:
         err = _report_conversion_error('dataset', e, **body)
-        return err, 400 
+        return err, 400
 
     try:
         db_session.add(orm_dataset)
@@ -166,20 +157,20 @@ def post_dataset(body):
     except exc.IntegrityError:
         db_session.rollback()
         err = _report_object_exists('dataset: ' + body['id'], **body)
-        return err, 405 
+        return err, 405
     except ORMException as e:
         db_session.rollback()
         err = _report_write_error('dataset', e, **body)
-        return err, 500 
+        return err, 500
 
     body.pop('ontologies_internal')
-    return body, 201 
+    return body, 201
 
 
 @apilog
 def get_dataset_by_id(dataset_id):
     """
-    :param dataset_id:
+    :param dataset_id: UUID
     :return: all projects or if projectId specified, corresponding project
     """
     db_session = get_session()
@@ -192,22 +183,24 @@ def get_dataset_by_id(dataset_id):
         err = dict(
             message=str(e),
             code=404)
-        return err, 404 
+        return err, 404
 
     if not specified_dataset:
         err = dict(message="Dataset not found: " + str(dataset_id), code=404)
-        return err, 404 
+        return err, 404
 
 
-    return dump(specified_dataset), 200 
+    return dump(specified_dataset), 200
 
 
 @apilog
 def delete_dataset_by_id(dataset_id):
     """
+    Current thoughts are that delete should only be a CLI accessible command
+    rather than API
 
-    :param dataset_id:
-    :return:
+    :param dataset_id: UUID
+    :return: 204 on successful delete
     """
     db_session = get_session()
 
@@ -216,11 +209,11 @@ def delete_dataset_by_id(dataset_id):
             .get(dataset_id)
     except ORMException as e:
         err = _report_search_failed('call', e, dataset_id=str(dataset_id))
-        return err, 500 
+        return err, 500
 
     if not specified_dataset:
         err = dict(message="Dataset not found: " + str(dataset_id), code=404)
-        return err, 404 
+        return err, 404
 
     try:
         row = db_session.query(Dataset).filter(Dataset.id == dataset_id).first()
@@ -228,17 +221,18 @@ def delete_dataset_by_id(dataset_id):
         db_session.commit()
     except ORMException as e:
         err = _report_update_failed('dataset', e, dataset_id=str(dataset_id))
-        return err, 500 
+        return err, 500
 
-    return None, 204 
+    return None, 204
 
 
 @apilog
 def search_datasets(tags=None, version=None, ontologies=None):
     """
-    :param tags:
-    :param version:
-    :return:
+    :param tags: List of strings
+    :param version: List of strings
+    :ontologies: List of ontology terms
+    :return: List of datasets matching any of the supplied parameters
     """
     db_session = get_session()
     try:
@@ -249,12 +243,11 @@ def search_datasets(tags=None, version=None, ontologies=None):
             # return any project that matches at least one tag
             datasets = datasets.filter(or_(*[Dataset.tags.contains(tag) for tag in tags]))
         if ontologies:
-            # print(Dataset.ontologies_internal)
             datasets = datasets.filter(or_(*[Dataset.ontologies_internal.contains(term) for term in ontologies]))
     except ORMException as e:
         err = _report_search_failed('dataset', e)
-        return err, 500 
-    return [dump(x) for x in datasets], 200 
+        return err, 500
+    return [dump(x) for x in datasets], 200
 
 
 @apilog
@@ -269,11 +262,16 @@ def search_dataset_filters():
 
 @apilog
 def get_search_filters(valid_filters):
+    """
+    Helper for search_dataset_filters
+    :valid_filters: List of filter names currently valid in the system
+    return: List of filter structures matching the names in valid_filters
+    """
     filter_file = pkg_resources.resource_filename('candig_dataset_service',
                                                   'orm/filters_search.json')
 
-    with open(filter_file, 'r') as ef:
-        search_filters = json.load(ef)
+    with open(filter_file, 'r') as filters:
+        search_filters = json.load(filters)
 
     response = []
 
@@ -281,7 +279,7 @@ def get_search_filters(valid_filters):
         if search_filter["filter"] in valid_filters:
             response.append(search_filter)
 
-    return response, 200 
+    return response, 200
 
 
 @apilog
@@ -303,13 +301,9 @@ def search_dataset_ontologies():
 
     except ORMException as e:
         err = _report_search_failed('dataset', e)
-        return err, 500 
+        return err, 500
 
-    # log_outgoing(200, flask.request.headers['host'], flask.request.full_path)
-    # return terms, 200 
     return terms, 200
-    # print("Returning: {}".format(terms))
-    # return jsonify(terms)
 
 
 def search_dataset_discover(tags=None, version=None):
@@ -333,6 +327,12 @@ def get_datasets_discover_filters(tags=None, version=None):
 
 @apilog
 def post_change_log(body):
+    """
+    Create a new change log following the changeLog
+    schema in datasets.yaml
+
+    :return: body, 200 on success
+    """
     db_session = get_session()
     change_version = body.get('version')
 
@@ -342,7 +342,7 @@ def post_change_log(body):
         orm_changelog = ChangeLog(**body)
     except TypeError as e:
         err = _report_conversion_error('changelog', e, **body)
-        return err, 400 
+        return err, 400
 
     try:
         db_session.add(orm_changelog)
@@ -350,15 +350,15 @@ def post_change_log(body):
     except exc.IntegrityError:
         db_session.rollback()
         err = _report_object_exists('changelog: ' + body['version'], **body)
-        return err, 405 
+        return err, 405
     except ORMException as e:
         err = _report_write_error('changelog', e, **body)
-        return err, 500 
+        return err, 500
 
     logger().info(struct_log(action='post_change_log', status='created',
                              change_version=change_version, **body))
 
-    return body, 201 
+    return body, 201
 
 
 @apilog
@@ -373,9 +373,9 @@ def get_versions():
         versions = db_session.query(change_log.version)
     except ORMException as e:
         err = _report_search_failed('versions', e)
-        return err, 500 
+        return err, 500
 
-    return [entry.version for entry in versions], 200 
+    return [entry.version for entry in versions], 200
 
 
 @apilog
@@ -392,13 +392,13 @@ def get_change_log(version):
             .get(version)
     except ORMException as e:
         err = _report_search_failed('change log', e)
-        return err, 500 
+        return err, 500
 
     if not log:
         err = dict(message="Change log not found", code=404)
-        return err, 404 
+        return err, 404
 
-    return dump(log), 200 
+    return dump(log), 200
 
 
 def validate_uuid_string(field_name, uuid_str):
@@ -412,4 +412,3 @@ def validate_uuid_string(field_name, uuid_str):
     except ValueError:
         raise IdentifierFormatError(field_name)
     return
-
