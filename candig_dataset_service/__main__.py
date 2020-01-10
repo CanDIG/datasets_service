@@ -25,12 +25,14 @@ def main(args=None):
 
     parser = argparse.ArgumentParser('Run dataset service')
     parser.add_argument('--port', default=8870)
-    parser.add_argument('--host', default='10.9.233.204')
+    parser.add_argument('--host', default='ga4ghdev01.bcgsc.ca')
     parser.add_argument('--database', default='./data/datasets.db')
     parser.add_argument('--logfile', default="./log/datasets.log")
     parser.add_argument('--loglevel', default='INFO',
                         choices=['DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL'])
+
     parser.add_argument('--name', default="candig_service")
+
 
     # known args used to supply command line args to pytest without raising an error here
     args, _ = parser.parse_known_args()
@@ -104,4 +106,5 @@ if __name__ == '__main__':
         APPLICATION.app.config["name"],
         APPLICATION.app.config["self"]
         ))
+
     APPLICATION.run(port=PORT)

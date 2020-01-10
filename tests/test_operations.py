@@ -34,7 +34,6 @@ def load_test_client(db_filename="operations.db"):  # pylint: disable=too-many-l
         orm.init_db('sqlite:///' + db_filename)
         dataset_1, dataset_2, changelog_1, changelog_2 = load_test_objects()
         app.app.config['BASE_DL_URL'] = 'http://127.0.0.1'
-        app.app.config['name'] = 'test'
 
     return dataset_1, dataset_2, context, changelog_1, changelog_2
 
@@ -89,6 +88,7 @@ def test_get_dataset_by_id(test_client):
         assert code == 200
 
 
+
 def test_get_dataset_ontologies(test_client):
     """
     get_dataset_by_id
@@ -100,7 +100,6 @@ def test_get_dataset_ontologies(test_client):
         result, code = operations.get_dataset_by_id(ds1['id'])
         assert result['ontologies'] == ontologies['d1']['terms']
         assert code == 200
-
 
 
 def test_get_dataset_by_id_key_error(test_client):
@@ -325,6 +324,7 @@ def test_search_datasets_different_version_tag(test_client):
         assert code == 200
 
 
+
 def test_search_datasets_one_ontology(test_client):
     """
     search_datasets
@@ -424,6 +424,7 @@ def test_get_versions(test_client):
         assert code == 200
 
 
+
 def test_search_ontologies_duo(test_client):
     """
     search_dataset_ontologies
@@ -435,7 +436,6 @@ def test_search_ontologies_duo(test_client):
         response, code = operations.search_dataset_ontologies()
         assert code == 200
         assert response == ["DUO:0000014", "DUO:0000018"]
-
 
 def load_test_objects():
     dataset_1_id = uuid.uuid4().hex

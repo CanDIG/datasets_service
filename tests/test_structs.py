@@ -9,6 +9,7 @@ filterStruct = [
     "fieldType": "string",
     "description": "Version to return"
   }
+
 ]
 
 
@@ -41,4 +42,3 @@ ontologies = {
     ]
   }
 }
-

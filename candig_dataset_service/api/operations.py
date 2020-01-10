@@ -6,6 +6,7 @@ import json
 import datetime
 import uuid
 import pkg_resources
+
 import flask
 
 from sqlalchemy import exc, or_
@@ -17,7 +18,6 @@ from candig_dataset_service.api.logging import structured_log as struct_log
 from candig_dataset_service.api.models import Version
 from candig_dataset_service.api.exceptions import IdentifierFormatError
 from candig_dataset_service.ontologies.duo import OntologyParser, OntologyValidator, ont
-
 
 
 
@@ -108,6 +108,7 @@ def post_dataset(body):
     up current ontologies but is not a property to be returned
     when querying the dataset.
     """
+
     db_session = get_session()
 
     if not body.get('id'):
@@ -120,6 +121,7 @@ def post_dataset(body):
         body['version'] = Version
 
     body['created'] = datetime.datetime.utcnow()
+
     mapped = []
 
     if body.get('ontologies'):
@@ -167,10 +169,12 @@ def post_dataset(body):
     return body, 201
 
 
+
 @apilog
 def get_dataset_by_id(dataset_id):
     """
     :param dataset_id: UUID
+
     :return: all projects or if projectId specified, corresponding project
     """
     db_session = get_session()
@@ -189,7 +193,6 @@ def get_dataset_by_id(dataset_id):
         err = dict(message="Dataset not found: " + str(dataset_id), code=404)
         return err, 404
 
-
     return dump(specified_dataset), 200
 
 
@@ -201,6 +204,7 @@ def delete_dataset_by_id(dataset_id):
 
     :param dataset_id: UUID
     :return: 204 on successful delete
+
     """
     db_session = get_session()
 
@@ -244,6 +248,7 @@ def search_datasets(tags=None, version=None, ontologies=None):
             datasets = datasets.filter(or_(*[Dataset.tags.contains(tag) for tag in tags]))
         if ontologies:
             datasets = datasets.filter(or_(*[Dataset.ontologies_internal.contains(term) for term in ontologies]))
+
     except ORMException as e:
         err = _report_search_failed('dataset', e)
         return err, 500
@@ -305,7 +310,6 @@ def search_dataset_ontologies():
 
     return terms, 200
 
-
 def search_dataset_discover(tags=None, version=None):
     err = dict(
         message="Not implemented",
@@ -316,8 +320,6 @@ def search_dataset_discover(tags=None, version=None):
 
 
 def get_datasets_discover_filters(tags=None, version=None):
-
-
     err = dict(
         message="Not implemented",
         code=501
@@ -333,6 +335,7 @@ def post_change_log(body):
 
     :return: body, 200 on success
     """
+
     db_session = get_session()
     change_version = body.get('version')
 
@@ -359,6 +362,7 @@ def post_change_log(body):
                              change_version=change_version, **body))
 
     return body, 201
+
 
 
 @apilog

@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: Dataset Service API
   description: API for datasets retrieval and discovery
-  version: "1.0.0"
+  version: "0.1"
 tags:
   - name: datasets
     description: High level collection of datasets
@@ -22,6 +22,7 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/dataset_ingest"
+
       responses:
         "201":
           description: New dataset created
@@ -60,6 +61,7 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - api_key: []
+
   /datasets/{dataset_id}:
     get:
       tags:
@@ -217,6 +219,7 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - api_key: []
+
   /datasets/search/ontologies:
     get:
       tags:
@@ -250,6 +253,7 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - api_key: []
+        
   /datasets/discover/search:
     get:
       tags:
@@ -479,6 +483,7 @@ components:
           format: int32
         message:
           type: string
+
     dataset_ingest:
       type: object
       properties:
@@ -508,6 +513,7 @@ components:
         url: https://github.com/candig
       xml:
         name: dataset
+
 
     dataset:
       type: object
@@ -584,6 +590,7 @@ components:
       type: string
       pattern: 'DUO:0+[0-9]+'
       example: 'DUO:0000017'
+
 
     searchFilter:
       type: object
