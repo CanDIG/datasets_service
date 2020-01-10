@@ -88,6 +88,20 @@ def test_get_dataset_by_id(test_client):
         assert code == 200
 
 
+
+def test_get_dataset_ontologies(test_client):
+    """
+    get_dataset_by_id
+    """
+
+    ds1, ds2, context, _, _ = test_client
+
+    with context:
+        result, code = operations.get_dataset_by_id(ds1['id'])
+        assert result['ontologies'] == ontologies['d1']['terms']
+        assert code == 200
+
+
 def test_get_dataset_by_id_key_error(test_client):
     """
     get_dataset_by_id
@@ -310,6 +324,21 @@ def test_search_datasets_different_version_tag(test_client):
         assert code == 200
 
 
+
+def test_search_datasets_one_ontology(test_client):
+    """
+    search_datasets
+    """
+
+    ds1, ds2, context, _, _ = test_client
+
+    with context:
+        datasets, code = operations.search_datasets(ontologies=["DUO:0000018"])
+        assert len(datasets) == 1
+        assert datasets == [ds1]
+        assert code == 200
+
+
 def test_search_dataset_filters(test_client):
     """
     search_dataset_filters
@@ -395,6 +424,19 @@ def test_get_versions(test_client):
         assert code == 200
 
 
+
+def test_search_ontologies_duo(test_client):
+    """
+    search_dataset_ontologies
+    """
+
+    ds1, ds2, context, _, _ = test_client
+
+    with context:
+        response, code = operations.search_dataset_ontologies()
+        assert code == 200
+        assert response == ["DUO:0000014", "DUO:0000018"]
+
 def load_test_objects():
     dataset_1_id = uuid.uuid4().hex
     dataset_2_id = uuid.uuid4().hex
@@ -404,7 +446,13 @@ def load_test_objects():
         'name': 'dataset_1',
         'description': 'mock profyle project for testing',
         'tags': ['candig', 'orange', 'pine'],
-        'version': '0.1'
+        'version': '0.1',
+        'ontologies': [
+            {"id": "duo",
+             "terms": [{"id": "DUO:0000018"}, {"id": "DUO:0000014"}]}
+        ]
+
+
     }
 
     test_dataset_2 = {
@@ -412,7 +460,12 @@ def load_test_objects():
         'name': 'dataset_2',
         'description': 'mock tf4cn project for testing',
         'tags': ['test', 'candig', 'blue'],
-        'version': '0.3'
+        'version': '0.3',
+        'ontologies': [
+            {"id": "duo",
+             "terms": [{"id": "DUO:0000014"}]}
+        ]
+
     }
 
     test_changelog_1 = {

@@ -36,6 +36,9 @@ class Dataset(Base):
     tags = Column(JsonArray(), default=[])
     name = Column(String(100), unique=True, nullable=False)
     description = Column(String(100), default="")
+    ontologies = Column(JsonArray(), default=[])
+    ontologies_internal = Column(JsonArray(), default=[]) # Shorthand for searching/lookup
+
     created = Column(DateTime())
     __table_args__ = ()
 
@@ -49,4 +52,13 @@ class ChangeLog(Base):
     log = Column(JsonArray())
     created = Column(DateTime())
     __table_args__ = ()
+
+
+class ActiveOntologies(Base):
+    """
+    SQLAlchemy class representing Ontologies in use
+    """
+    __tablename__ = 'active_ontologies'
+    name = Column(String(10), primary_key=True)
+    terms = Column(JsonArray(), default=[])
 
