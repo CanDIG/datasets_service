@@ -49,6 +49,7 @@ def apilog(func, *args, **kwargs):
         entrydict['data'] = str(request.data)
         entrydict['address'] = request.remote_addr
         entrydict['headers'] = str(request.headers)
+
     except RuntimeError:
         entrydict['called'] = func.__name__
         entrydict['args'] = args

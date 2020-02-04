@@ -4,21 +4,21 @@ Methods to handle incoming service requests
 
 import json
 import datetime
-import pkg_resources
 import uuid
+import pkg_resources
+
 import flask
 
 from sqlalchemy import exc, or_
-from pronto import Ontology
+
 
 from candig_dataset_service.orm.models import Dataset, ChangeLog
 from candig_dataset_service.orm import get_session, ORMException, dump
 from candig_dataset_service.api.logging import apilog, logger
 from candig_dataset_service.api.logging import structured_log as struct_log
-from candig_dataset_service.api.models import BasePath, Version
+from candig_dataset_service.api.models import Version
 from candig_dataset_service.api.exceptions import IdentifierFormatError
 from candig_dataset_service.ontologies.duo import OntologyParser, OntologyValidator, ont
-
 
 
 
@@ -98,12 +98,17 @@ def _report_write_error(typename, exception, **kwargs):
     err = dict(message=message, code=500)
     return err
 
-
-
-
-
 @apilog
 def post_dataset(body):
+    """
+    Creates a new dataset following the dataset_ingest
+    schema defined in datasets.yaml
+
+    The ontologies_internal property is used when looking
+    up current ontologies but is not a property to be returned
+    when querying the dataset.
+    """
+
     db_session = get_session()
 
     if not body.get('id'):
@@ -124,14 +129,14 @@ def post_dataset(body):
 
         mapped = {ontology['id']: ontology['terms'] for ontology in body['ontologies']}
         if 'duo' in mapped.keys():
-            ov = OntologyValidator(ont=ont, input_json=mapped)
-            valid, invalids = ov.validate_duo()
+            validator = OntologyValidator(ont=ont, input_json=mapped)
+            valid, invalids = validator.validate_duo()
+
             if not valid:
                 err = dict(message="DUO Validation Errors encountered: " + str(invalids), code=400)
                 return err, 400
 
-            duo_terms = json.loads(ov.get_duo_list())
-
+            duo_terms = json.loads(validator.get_duo_list())
             duos = []
 
             for term in duo_terms:
@@ -160,17 +165,18 @@ def post_dataset(body):
         return err, 500
 
     body.pop('ontologies_internal')
-    return body, 201, {'Location': BasePath + '/datasets/' + str(iid)}
+    return body, 201
 
 
 @apilog
 def get_dataset_by_id(dataset_id):
     """
-    :param dataset_id:
+    :param dataset_id: UUID
+
     :return: all projects or if projectId specified, corresponding project
     """
     db_session = get_session()
-    print(dataset_id)
+
     try:
         validate_uuid_string('id', dataset_id)
         specified_dataset = db_session.query(Dataset) \
@@ -191,9 +197,11 @@ def get_dataset_by_id(dataset_id):
 @apilog
 def delete_dataset_by_id(dataset_id):
     """
+    Current thoughts are that delete should only be a CLI accessible command
+    rather than API
 
-    :param dataset_id:
-    :return:
+    :param dataset_id: UUID
+    :return: 204 on successful delete
     """
     db_session = get_session()
 
@@ -222,9 +230,10 @@ def delete_dataset_by_id(dataset_id):
 @apilog
 def search_datasets(tags=None, version=None, ontologies=None):
     """
-    :param tags:
-    :param version:
-    :return:
+    :param tags: List of strings
+    :param version: List of strings
+    :ontologies: List of ontology terms
+    :return: List of datasets matching any of the supplied parameters
     """
     db_session = get_session()
     try:
@@ -235,8 +244,8 @@ def search_datasets(tags=None, version=None, ontologies=None):
             # return any project that matches at least one tag
             datasets = datasets.filter(or_(*[Dataset.tags.contains(tag) for tag in tags]))
         if ontologies:
-            # print(Dataset.ontologies_internal)
             datasets = datasets.filter(or_(*[Dataset.ontologies_internal.contains(term) for term in ontologies]))
+
     except ORMException as e:
         err = _report_search_failed('dataset', e)
         return err, 500
@@ -255,11 +264,16 @@ def search_dataset_filters():
 
 @apilog
 def get_search_filters(valid_filters):
+    """
+    Helper for search_dataset_filters
+    :valid_filters: List of filter names currently valid in the system
+    return: List of filter structures matching the names in valid_filters
+    """
     filter_file = pkg_resources.resource_filename('candig_dataset_service',
                                                   'orm/filters_search.json')
 
-    with open(filter_file, 'r') as ef:
-        search_filters = json.load(ef)
+    with open(filter_file, 'r') as filters:
+        search_filters = json.load(filters)
 
     response = []
 
@@ -292,7 +306,6 @@ def search_dataset_ontologies():
 
     return terms, 200
 
-
 def search_dataset_discover(tags=None, version=None):
     err = dict(
         message="Not implemented",
@@ -303,8 +316,6 @@ def search_dataset_discover(tags=None, version=None):
 
 
 def get_datasets_discover_filters(tags=None, version=None):
-
-
     err = dict(
         message="Not implemented",
         code=501
@@ -314,6 +325,12 @@ def get_datasets_discover_filters(tags=None, version=None):
 
 @apilog
 def post_change_log(body):
+    """
+    Create a new change log following the changeLog
+    schema in datasets.yaml
+
+    :return: body, 200 on success
+    """
     db_session = get_session()
     change_version = body.get('version')
 
@@ -336,7 +353,11 @@ def post_change_log(body):
         err = _report_write_error('changelog', e, **body)
         return err, 500
 
-    return body, 201, {'Location': BasePath + '/changelog/' + change_version}
+    logger().info(struct_log(action='post_change_log', status='created',
+                             change_version=change_version, **body))
+
+    return body, 201
+
 
 
 @apilog

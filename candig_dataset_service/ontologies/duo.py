@@ -91,10 +91,10 @@ class OntologyValidator():
     All DUO objects must contain an 'id' field, selected 'id's need to have 'comment'.
 
     Example input file:
-    {"duo": [{"id": "DUO:0000018"}, {"id": "DUO:0000024", "modifier": "2030-01-01"}]}
+    {"duo": [{"id": "DUO:0000018"}, {"id": "DUO:0000025", "modifier": "2030-01-01"}]}
 
     Example output (based on the input above):
-    [{"id": "DUO:0000018"}, {"id": "DUO:0000024", "modifier": "2030-01-01"}]
+    [{"id": "DUO:0000018"}, {"id": "DUO:0000025", "modifier": "2030-01-01"}]
     """
 
     def __init__(self, ont, input_json):
@@ -148,7 +148,8 @@ class OntologyValidator():
                 # Fail if modifier is supplied with IDs that do not require it
                 if modifier is not None and duo_id not in self.ids_need_modifiers_with_def:
                     validity = False
-                    invalids.append({duo_id: "Cannot accept a modifier"})
+
+                    invalids.append({duo_id: "Cannot accept a modfier"})
 
             except KeyError:
                 # Fail if the ID cannot be found in ontology

@@ -38,6 +38,7 @@ class Dataset(Base):
     description = Column(String(100), default="")
     ontologies = Column(JsonArray(), default=[])
     ontologies_internal = Column(JsonArray(), default=[]) # Shorthand for searching/lookup
+
     created = Column(DateTime())
     __table_args__ = ()
 
@@ -60,3 +61,4 @@ class ActiveOntologies(Base):
     __tablename__ = 'active_ontologies'
     name = Column(String(10), primary_key=True)
     terms = Column(JsonArray(), default=[])
+

@@ -24,6 +24,7 @@ duo = {
     39: "DUO:0000039", 40: "DUO:0000040", 42: "DUO:0000042"
 }
 
+
 [
     "DUO:0000001", "DUO:0000002", "DUO:0000003", "DUO:0000004",
     "DUO:0000005", "DUO:0000006", "DUO:0000007", "DUO:0000011",
@@ -33,6 +34,7 @@ duo = {
     "DUO:0000026", "DUO:0000027", "DUO:0000028", "DUO:0000029",
     "DUO:0000042"
 ]
+
 
 
 
@@ -47,14 +49,18 @@ def test_valid_duo_000002():
     term = {"duo": [{"id": duo[2]}]}
     ov = OntologyValidator(ont=ont, input_json=term)
     valid, invalid = ov.validate_duo()
+
     assert not valid
+
 
 
 def test_valid_duo_000003():
     term = {"duo": [{"id": duo[3]}]}
     ov = OntologyValidator(ont=ont, input_json=term)
     valid, invalid = ov.validate_duo()
+
     assert not valid
+
 
 
 def test_valid_duo_000004():
