@@ -88,7 +88,6 @@ def test_get_dataset_by_id(test_client):
         assert code == 200
 
 
-
 def test_get_dataset_ontologies(test_client):
     """
     get_dataset_by_id
@@ -323,8 +322,6 @@ def test_search_datasets_different_version_tag(test_client):
         assert datasets == []
         assert code == 200
 
-
-
 def test_search_datasets_one_ontology(test_client):
     """
     search_datasets
@@ -422,8 +419,6 @@ def test_get_versions(test_client):
         response, code = operations.get_versions()
         assert response == [cl1['version'], cl2['version']]
         assert code == 200
-
-
 
 def test_search_ontologies_duo(test_client):
     """

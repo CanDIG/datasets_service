@@ -30,8 +30,8 @@ def main(args=None):
     parser.add_argument('--logfile', default="./log/datasets.log")
     parser.add_argument('--loglevel', default='INFO',
                         choices=['DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL'])
-
     parser.add_argument('--name', default="candig_service")
+
 
 
     # known args used to supply command line args to pytest without raising an error here
@@ -48,6 +48,7 @@ def main(args=None):
 
     app.app.config['name'] = args.name
     app.app.config["self"] = "http://{}/{}".format(args.host, args.port)
+
     # set up db
 
     define("dbfile", default=args.database)
@@ -106,5 +107,4 @@ if __name__ == '__main__':
         APPLICATION.app.config["name"],
         APPLICATION.app.config["self"]
         ))
-
     APPLICATION.run(port=PORT)

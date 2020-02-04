@@ -11,6 +11,7 @@ import flask
 
 from sqlalchemy import exc, or_
 
+
 from candig_dataset_service.orm.models import Dataset, ChangeLog
 from candig_dataset_service.orm import get_session, ORMException, dump
 from candig_dataset_service.api.logging import apilog, logger
@@ -97,7 +98,6 @@ def _report_write_error(typename, exception, **kwargs):
     err = dict(message=message, code=500)
     return err
 
-
 @apilog
 def post_dataset(body):
     """
@@ -121,7 +121,6 @@ def post_dataset(body):
         body['version'] = Version
 
     body['created'] = datetime.datetime.utcnow()
-
     mapped = []
 
     if body.get('ontologies'):
@@ -132,12 +131,12 @@ def post_dataset(body):
         if 'duo' in mapped.keys():
             validator = OntologyValidator(ont=ont, input_json=mapped)
             valid, invalids = validator.validate_duo()
+
             if not valid:
                 err = dict(message="DUO Validation Errors encountered: " + str(invalids), code=400)
                 return err, 400
 
             duo_terms = json.loads(validator.get_duo_list())
-
             duos = []
 
             for term in duo_terms:
@@ -167,7 +166,6 @@ def post_dataset(body):
 
     body.pop('ontologies_internal')
     return body, 201
-
 
 
 @apilog
@@ -204,7 +202,6 @@ def delete_dataset_by_id(dataset_id):
 
     :param dataset_id: UUID
     :return: 204 on successful delete
-
     """
     db_session = get_session()
 
@@ -292,7 +289,6 @@ def search_dataset_ontologies():
     """
     Return all ontologies currently used by datasets
     """
-    # print(flask.request.remote_addr, flask.request.headers)
 
     db_session = get_session()
     try:
@@ -335,7 +331,6 @@ def post_change_log(body):
 
     :return: body, 200 on success
     """
-
     db_session = get_session()
     change_version = body.get('version')
 
@@ -416,3 +411,4 @@ def validate_uuid_string(field_name, uuid_str):
     except ValueError:
         raise IdentifierFormatError(field_name)
     return
+

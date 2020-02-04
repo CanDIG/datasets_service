@@ -148,6 +148,7 @@ class OntologyValidator():
                 # Fail if modifier is supplied with IDs that do not require it
                 if modifier is not None and duo_id not in self.ids_need_modifiers_with_def:
                     validity = False
+
                     invalids.append({duo_id: "Cannot accept a modfier"})
 
             except KeyError:

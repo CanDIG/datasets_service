@@ -230,11 +230,7 @@ paths:
       responses:
         "200":
           description: successful operation
-          # headers:
-          #   X-Source:
-          #     schema:
-          #       type: string
-          #     description: IP Address
+
           content:
             application/json:
               schema:
@@ -253,7 +249,7 @@ paths:
                 $ref: "#/components/schemas/Error"
       security:
         - api_key: []
-        
+
   /datasets/discover/search:
     get:
       tags:
