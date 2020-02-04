@@ -22,7 +22,7 @@ ontologies = {
          'id': 'DUO:0000018'},
         {'shorthand': 'RU',
          'name': 'research use only',
-         'definition': 'This secondary category consent code indicates that use is limited to research purposes (e.g., does not include its use in clinical care).',
+         'definition': 'This data use limitation indicates that use is limited to research purposes (e.g., does not include its use in clinical care).',
          'id': 'DUO:0000014'}
       ]
   },

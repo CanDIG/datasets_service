@@ -170,7 +170,7 @@ def get_dataset_by_id(dataset_id):
     :return: all projects or if projectId specified, corresponding project
     """
     db_session = get_session()
-
+    print(dataset_id)
     try:
         validate_uuid_string('id', dataset_id)
         specified_dataset = db_session.query(Dataset) \
@@ -184,7 +184,6 @@ def get_dataset_by_id(dataset_id):
     if not specified_dataset:
         err = dict(message="Dataset not found: " + str(dataset_id), code=404)
         return err, 404
-
 
     return dump(specified_dataset), 200
 
@@ -336,9 +335,6 @@ def post_change_log(body):
     except ORMException as e:
         err = _report_write_error('changelog', e, **body)
         return err, 500
-
-    logger().info(struct_log(action='post_change_log', status='created',
-                             change_version=change_version, **body))
 
     return body, 201, {'Location': BasePath + '/changelog/' + change_version}
 
