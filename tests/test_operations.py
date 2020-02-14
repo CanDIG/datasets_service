@@ -294,6 +294,21 @@ def test_search_datasets_version_tag(test_client):
         assert datasets == [ds2]
         assert code == 200
 
+def test_search_datasets_multi_match_tag(test_client):
+    """
+    search_datasets
+    """
+
+    ds1, ds2, context, _, _ = test_client
+
+    with context:
+        datasets, code = operations.search_datasets(tags=['pine', 'blue'])
+        assert len(datasets) == 2
+        assert datasets == [ds1, ds2]
+        assert code == 200
+
+
+
 
 def test_search_datasets_version_bad_tag(test_client):
     """

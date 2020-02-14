@@ -236,6 +236,7 @@ def search_datasets(tags=None, version=None, ontologies=None):
     :return: List of datasets matching any of the supplied parameters
     """
     db_session = get_session()
+    print(tags, version, ontologies)
     try:
         datasets = db_session.query(Dataset)
         if version:
