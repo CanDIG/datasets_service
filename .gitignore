@@ -4,3 +4,5 @@
 .idea
 *_env
 *.db
+
+docs/_build

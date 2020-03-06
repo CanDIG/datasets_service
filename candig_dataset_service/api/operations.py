@@ -107,6 +107,17 @@ def post_dataset(body):
     The ontologies_internal property is used when looking
     up current ontologies but is not a property to be returned
     when querying the dataset.
+
+
+    :param body: POST request body
+    :type body: object
+
+    :returns: body, 201 on success, error code on failure
+    :rtype: object, int 
+
+    .. note::
+        Refer to the OpenAPI Spec for a proper schemas of dataset_ingest and dataset objects.
+
     """
 
     db_session = get_session()
@@ -172,8 +183,10 @@ def post_dataset(body):
 def get_dataset_by_id(dataset_id):
     """
     :param dataset_id: UUID
+    :type dataset_id: string
 
-    :return: all projects or if projectId specified, corresponding project
+    :return: dataset specified by UUID, 200 on success. Error code on failure.
+    :rtype: dataset schema, int
     """
     db_session = get_session()
 
@@ -232,7 +245,7 @@ def search_datasets(tags=None, version=None, ontologies=None):
     """
     :param tags: List of strings
     :param version: List of strings
-    :ontologies: List of ontology terms
+    :param ontologies: List of ontology terms
     :return: List of datasets matching any of the supplied parameters
     """
     db_session = get_session()
@@ -256,7 +269,10 @@ def search_datasets(tags=None, version=None, ontologies=None):
 @apilog
 def search_dataset_filters():
     """
-    :return: filters for project searches
+    Searches through filters specified in orm/filters_search.json
+
+    :return: List of filters for project searches
+    :rtype: object
     """
     valid_filters = ["tags", "version"]
 
@@ -267,8 +283,9 @@ def search_dataset_filters():
 def get_search_filters(valid_filters):
     """
     Helper for search_dataset_filters
-    :valid_filters: List of filter names currently valid in the system
-    return: List of filter structures matching the names in valid_filters
+
+    :param valid_filters: List of filter names currently valid in the system
+    :return: List of filter structures matching the names in valid_filters
     """
     filter_file = pkg_resources.resource_filename('candig_dataset_service',
                                                   'orm/filters_search.json')
@@ -288,7 +305,9 @@ def get_search_filters(valid_filters):
 @apilog
 def search_dataset_ontologies():
     """
-    Return all ontologies currently used by datasets
+    Queries the dataset database for all ontology terms used by the stored datasets.
+
+    :return: List of all ontologies currently used by datasets
     """
 
     db_session = get_session()
@@ -308,6 +327,9 @@ def search_dataset_ontologies():
     return terms, 200
 
 def search_dataset_discover(tags=None, version=None):
+    """
+    Discovery methods are not implemented at this time
+    """
     err = dict(
         message="Not implemented",
         code=501
@@ -317,6 +339,9 @@ def search_dataset_discover(tags=None, version=None):
 
 
 def get_datasets_discover_filters(tags=None, version=None):
+    """
+    Discovery methods are not implemented at this time
+    """
     err = dict(
         message="Not implemented",
         code=501
@@ -329,6 +354,9 @@ def post_change_log(body):
     """
     Create a new change log following the changeLog
     schema in datasets.yaml
+
+    :param body: POST body object following the changeLog schema
+    :type body: object
 
     :return: body, 200 on success
     """
@@ -364,7 +392,11 @@ def post_change_log(body):
 @apilog
 def get_versions():
     """
-    :return: release versions of the database
+    Query the change logs for and gather all the versions
+    to return. 
+
+    :return: List of release versions of the database
+    :rtype: string
     """
     db_session = get_session()
     change_log = ChangeLog
@@ -381,6 +413,8 @@ def get_versions():
 @apilog
 def get_change_log(version):
     """
+    Query the database for a specific change log based on version
+
     :param version: required release version
     :return: changes associated with specified release version
     """
@@ -404,6 +438,7 @@ def get_change_log(version):
 def validate_uuid_string(field_name, uuid_str):
     """
     Validate that the id parameter is a valid UUID string
+
     :param uuid_str: query parameter
     :param field_name: id field name
     """

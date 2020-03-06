@@ -5,14 +5,14 @@ from pprint import pprint
 
 class OntologyFile():
     """
-    Get a list of ontology terms of an ontology file.
+    Gets a list of ontology terms of an ontology file hosted on the internet.
 
-    Example usage:
+    Example::
 
-    from pronto import Ontology
-    ont = Ontology("https://raw.githubusercontent.com/EBISPOT/DUO/master/src/ontology/duo-basic.owl")
-    duos = OntologyFile(ont)
-    duo_terms = duos.get_terms()
+    >>> from pronto import Ontology
+    >>> ont = Ontology("https://raw.githubusercontent.com/EBISPOT/DUO/master/src/ontology/duo-basic.owl")
+    >>> duos = OntologyFile(ont)
+    >>> duo_terms = duos.get_terms()
     """
 
     def __init__(self, ont):
