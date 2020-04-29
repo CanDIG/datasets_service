@@ -434,6 +434,25 @@ def get_change_log(version):
 
     return dump(log), 200
 
+@apilog
+def verify(body):
+    """
+    Query database to check the existence of datasets and allow
+    other service to add dataset to its local db
+
+    """
+
+    datasets = body.get('datasets')
+    verified = []
+
+    for dataset in datasets:
+        returned, code = get_dataset_by_id(dataset["dataset_id"])
+        if code == 200:
+            if returned['name'] == dataset['name']:
+                verified.append(dataset["dataset_id"])
+
+    return verified, 200
+
 
 def validate_uuid_string(field_name, uuid_str):
     """

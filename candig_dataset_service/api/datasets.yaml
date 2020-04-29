@@ -26,11 +26,6 @@ paths:
       responses:
         "201":
           description: New dataset created
-          headers:
-            Location:
-              schema:
-                type: string
-                format: url
           content:
             application/json:
               schema:
@@ -458,6 +453,54 @@ paths:
           description: Change log not found
       security:
         - api_key: []
+  /datasets/verify:
+    post:
+      tags:
+        - Authz
+      summary: Verify incoming datasets being added in other CanDIG services
+      description: Returns datasets which are deemed verified by the service
+      operationId: candig_dataset_service.api.operations.verify
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/verify_set"
+      responses:
+        "201":
+          description: New dataset created
+          headers:
+            Location:
+              schema:
+                type: string
+                format: url
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/dataset"
+        "400":
+          description: dataset provided in body does not pass schema validation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Authorisation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "405":
+          description: Forbidden to overwrite dataset in post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal error - dataset not created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 servers:
   - url: /v2
 components:
@@ -620,3 +663,16 @@ components:
         url: https://github.com/candig
       xml:
         name: changeLog
+    verify_set:
+      type: object
+      properties:
+        datasets:
+          type: array
+          items:
+            type: object
+            properties:
+              dataset_id:
+                type: string
+                format: uuid
+              name:
+                type: string
