@@ -26,11 +26,6 @@ paths:
       responses:
         "201":
           description: New dataset created
-          headers:
-            Location:
-              schema:
-                type: string
-                format: url
           content:
             application/json:
               schema:
@@ -348,11 +343,6 @@ paths:
       responses:
         "201":
           description: New change log created
-          headers:
-            Location:
-              schema:
-                type: string
-                format: url
           content:
             application/json:
               schema:
