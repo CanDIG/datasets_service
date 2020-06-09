@@ -1,8 +1,12 @@
-*.pyc
-.coverage
-*.log
-.idea
-*_env
-*.db
+# IDE stuff
+.idea/$CACHE_FILE$
+.idea/dataSources*
+.idea/rSettings.xml
+.idea/workspace.xml
+*.swp
+*.swo
 
-docs/_build
+# others
+*.pyc
+env
+__pycache__

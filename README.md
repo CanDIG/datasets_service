@@ -26,17 +26,17 @@ pip install -r requirements.txt
 The service can be started with:
 
 ```
-python -m candig_datasets
+python -m candig_dataset_service
 ```
 
 If wanting to run multiple nodes on the same network, create different
 service configs and specify them at runtime:
 
 ```
-python -m candig_datasets --host 0.0.0.0 --port 4232 --logfile ./log/newlog.log
+python -m candig_dataset_service --host 0.0.0.0 --port 4232 --logfile ./log/newlog.log
 ```
 
-Once the service is running, a Swagger UI can be accessed at : `/datasets/ui`
+Once the service is running, a Swagger UI can be accessed at : `/v2/`
 
 
 ### Testing
