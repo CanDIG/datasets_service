@@ -1,8 +1,12 @@
+# application specific
+.coverage
+*.log
+*_env
+*.db
+docs/_build
+
 # IDE stuff
-.idea/$CACHE_FILE$
-.idea/dataSources*
-.idea/rSettings.xml
-.idea/workspace.xml
+.idea
 *.swp
 *.swo
 
