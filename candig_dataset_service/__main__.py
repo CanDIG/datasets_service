@@ -11,6 +11,7 @@ import logging
 
 import connexion
 import pkg_resources
+from prometheus_flask_exporter import PrometheusMetrics
 
 from tornado.options import define
 import candig_dataset_service.orm
@@ -100,6 +101,7 @@ app = configure_app()
 # expose flask app for uwsgi
 
 application = app.app
+metrics = PrometheusMetrics(application)
 
 if __name__ == '__main__':
     APPLICATION, PORT = main()
