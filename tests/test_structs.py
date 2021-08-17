@@ -17,16 +17,8 @@ ontologies = {
   "d1": {
       "id": "duo",
       "terms": [
-        {'shorthand': 'NPU',
-         'name': 'not for profit use only',
-         'definition': 'This requirement indicates that use of the data is limited to not-for-profit organizations and not-for-profit use, non-commercial use.',
-         'id': 'DUO:0000018'},
-        {'shorthand': 'RU',
-         'name': 'research use only',
-
-         'definition': 'This data use limitation indicates that use is limited to research purposes (e.g., does not include its use in clinical care).',
-
-         'id': 'DUO:0000014'}
+        {'id': 'DUO:0000018', 'shorthand': 'NPUNCU', 'name': 'not for profit, non commercial use only', 'definition': 'This data use modifier indicates that use of the data is limited to not-for-profit organizations and not-for-profit use, non-commercial use.'}, 
+        {'id': 'DUO:0000012', 'shorthand': 'RS', 'name': 'research specific restrictions', 'definition': 'This data use modifier indicates that use is limited to studies of a certain research type.'}
       ]
   },
   "d2": {
@@ -44,4 +36,3 @@ ontologies = {
     ]
   }
 }
-
