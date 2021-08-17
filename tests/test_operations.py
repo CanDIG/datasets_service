@@ -445,7 +445,7 @@ def test_search_ontologies_duo(test_client):
     with context:
         response, code = operations.search_dataset_ontologies()
         assert code == 200
-        assert response == ["DUO:0000014", "DUO:0000018"]
+        assert response == ["DUO:0000012", "DUO:0000018"]
 
 def load_test_objects():
     dataset_1_id = uuid.uuid4().hex
@@ -459,7 +459,7 @@ def load_test_objects():
         'version': '0.1',
         'ontologies': [
             {"id": "duo",
-             "terms": [{"id": "DUO:0000018"}, {"id": "DUO:0000014"}]}
+             "terms": [{"id": "DUO:0000018"}, {"id": "DUO:0000012"}]}
         ]
 
 
@@ -473,7 +473,7 @@ def load_test_objects():
         'version': '0.3',
         'ontologies': [
             {"id": "duo",
-             "terms": [{"id": "DUO:0000014"}]}
+             "terms": [{"id": "DUO:0000012"}]}
         ]
 
     }
