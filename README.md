@@ -1,3 +1,5 @@
+This repo is no longer maintained or updated.
+
 # datasets_service
 Microservice implementation of Datasets from CanDIG v1 for CanDIG v2
 
